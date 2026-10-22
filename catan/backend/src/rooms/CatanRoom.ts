@@ -14,6 +14,7 @@ import { verificarVictoria } from "../functions/verificarVictoria.js";
 import { construirCiudad } from "../functions/construirCiudad.js";
 import { comerciarBanca } from "../functions/comerciarBanca.js";
 import { descartarRecurso } from "../functions/descartarRecurso.js";
+import { descartarRecursosLote } from "../functions/descartarRecursosLote.js";
 import { moverLadron } from "../functions/moverLadron.js";
 import { robarJugador } from "../functions/robarJugador.js";
 import { jugarCaballero } from "../functions/jugarCaballero.js";
@@ -175,9 +176,23 @@ export class CatanRoom extends Room {
 
         });
 
+        //* Log de que salio 7
+        this.broadcast("log", {
+          jugador: this.jugadores.get(client.sessionId)?.nombre,
+          mensaje: " ha sacado 7, se mueve el ladron"
+        })
+
         //*Verificar si alguien tiene descarte, para enviarlo a fase de descarte
         if (this.partida.jugadoresParaDescartar.size > 0) {
           this.partida.faseJuego = FaseJuego.DESCARTE
+
+          //* Log de cada jugador que debe descartar
+          this.partida.jugadoresParaDescartar.forEach((cantidad, sessionId) => {
+            this.broadcast("log", {
+              jugador: this.jugadores.get(sessionId)?.nombre,
+              mensaje: ` debe descartar ${cantidad} cartas`
+            })
+          })
         } else {
           this.partida.faseJuego = FaseJuego.LADRON
         }
@@ -589,7 +604,7 @@ export class CatanRoom extends Room {
 
     msgDescartarRecursos: (
       client: Client,
-      mensaje: { recurso: string }
+      mensaje: { recurso?: string, recursos?: Record<string, number> }
     ) => {
       //* Verificar si estamos en fase de descarte
       if (this.partida.faseJuego !== FaseJuego.DESCARTE) {
@@ -610,12 +625,22 @@ export class CatanRoom extends Room {
       //* Encontrar al jugador que debe descartar
       const jugadorPorDescartar = client.sessionId;
 
-      //* Intentar descartar
-      const resultado = descartarRecurso(
-        this.jugadores.get(jugadorPorDescartar),
-        this.banca,
-        mensaje.recurso
-      );
+      //* Cartas que le faltan por descartar
+      const cartasDebidas = this.partida.jugadoresParaDescartar.get(jugadorPorDescartar);
+
+      //* Intentar descartar, por lote si llega "recursos" o una sola carta si llega "recurso"
+      const resultado = mensaje.recursos
+        ? descartarRecursosLote(
+          this.jugadores.get(jugadorPorDescartar),
+          this.banca,
+          mensaje.recursos,
+          cartasDebidas
+        )
+        : descartarRecurso(
+          this.jugadores.get(jugadorPorDescartar),
+          this.banca,
+          mensaje.recurso
+        );
 
 
       //*Error en descarte
@@ -630,7 +655,7 @@ export class CatanRoom extends Room {
       //*Actualizar la cantidad de recursos que le faltan por descartar
       this.partida.jugadoresParaDescartar.set(
         jugadorPorDescartar,
-        this.partida.jugadoresParaDescartar.get(jugadorPorDescartar) - 1
+        mensaje.recursos ? 0 : cartasDebidas - 1
       );
 
       //* Eliminarlo de la lista si ya no tiene que descartar
