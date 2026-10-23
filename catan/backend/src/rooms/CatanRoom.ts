@@ -26,6 +26,7 @@ import { jugarMonopolio } from "../functions/jugarMonopolio.js";
 import { siguienteTurnoPreconstruccion } from "../functions/siguienteTurnoPreconstruccion.js";
 import { comprarCarta } from "../functions/comprarCarta.js";
 import { sacarJugador } from "../functions/sacarJugador.js";
+import { faseTrasLadron } from "../functions/faseTrasLadron.js";
 
 
 export class CatanRoom extends Room {
@@ -37,6 +38,8 @@ export class CatanRoom extends Room {
   jugadores = this.state.jugadores;
   ofertas = new Map<string, unknown>();
   codigoAcceso = "";
+  //* Fase a la que se vuelve tras el robo (no se sincroniza con el cliente)
+  faseRetornoLadron: FaseJuego = FaseJuego.ACCIONES;
 
 
   messages = {
@@ -786,10 +789,13 @@ export class CatanRoom extends Room {
         return;
       }
 
-      //* Verificar si estamos en la fase de acciones
-      if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
+      //* El caballero se puede jugar antes o despues de lanzar los dados
+      if (
+        this.partida.faseJuego !== FaseJuego.DADOS &&
+        this.partida.faseJuego !== FaseJuego.ACCIONES
+      ) {
         client.send("error", {
-          mensajeError: "Termina de lanzar los dados primero"
+          mensajeError: "No puedes jugar el caballero en este momento"
         })
         return;
       }
@@ -812,6 +818,9 @@ export class CatanRoom extends Room {
         })
         return;
       }
+
+      //* Recordar desde que fase se jugo el caballero
+      const faseOrigen = this.partida.faseJuego;
 
       //* Mover al ladron y obtener los jugadores involucrados
       const { h, d } = mensaje;
@@ -847,10 +856,11 @@ export class CatanRoom extends Room {
 
       //* Extraemos los jugadores involucrados en el robo
       const jugadoresInvolucrados = resultado.jugadoresInvolucrados;
+      const siguienteFase = faseTrasLadron(faseOrigen, jugadoresInvolucrados.length);
 
-      //* Si no hay jugadores, pasamos a las ACCIONES
+      //* Si no hay jugadores, volvemos a la fase de origen
       if (jugadoresInvolucrados.length == 0) {
-        this.partida.faseJuego = FaseJuego.ACCIONES;
+        this.partida.faseJuego = siguienteFase;
         return;
       }
 
@@ -864,6 +874,9 @@ export class CatanRoom extends Room {
         return;
       }
 
+      //* Al terminar el robo se vuelve a la fase de origen
+      this.faseRetornoLadron = faseOrigen;
+
       //* Si hay 2 o mas jugadores involucrados, se pasa la lista de jugadores
       this.partida.jugadoresParaRobar.clear();
       this.partida.jugadoresParaRobar.push(...jugadoresInvolucrados);
@@ -871,7 +884,7 @@ export class CatanRoom extends Room {
 
       //? Entramos a fase especial para decidir a quien robar
 
-      this.partida.faseJuego = FaseJuego.ROBO;
+      this.partida.faseJuego = siguienteFase;
     },
 
     msgIntercambiarJugador: (
