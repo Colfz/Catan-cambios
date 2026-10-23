@@ -676,6 +676,11 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
             jugadores={jugadores}
             ordenJugadores={ordenJugadores}
             miSessionId={miSessionId}
+            pendientesDescarte={
+              partidaActual?.faseJuego === FASE_JUEGO.DESCARTE
+                ? partidaActual.jugadoresParaDescartar
+                : undefined
+            }
           />
         </div>
         <div className="tablero" style={{ position: 'relative' }}>
