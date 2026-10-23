@@ -70,7 +70,7 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
               size="sm"
               disabled={!puedeUsarCarta}
               onClick={onUsarCarta}
-              title="Solo una carta por turno, en la fase de acciones"
+              title="Solo una carta por turno, en la fase de acciones (el caballero también antes de lanzar los dados)"
               className="flex-fill m-0"
             >
               Usar carta
