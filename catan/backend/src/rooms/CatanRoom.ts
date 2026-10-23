@@ -761,6 +761,9 @@ export class CatanRoom extends Room {
         return;
       }
 
+      //* El ladron por un 7 siempre vuelve a ACCIONES
+      this.faseRetornoLadron = FaseJuego.ACCIONES;
+
       //* Si hay 2 o mas jugadores involucrados, se pasa la lista de jugadores
       this.partida.jugadoresParaRobar.clear();
       this.partida.jugadoresParaRobar.push(...jugadoresinvolucrados);
@@ -1442,9 +1445,10 @@ export class CatanRoom extends Room {
         mensaje: ` ha robado un recurso a ${this.jugadores.get(mensaje.jugadorRobado)?.nombre}`
       })
 
-      //* Limpiar Lista y volver a acciones
+      //* Limpiar Lista y volver a la fase de origen (DADOS si fue un caballero antes de tirar)
       this.partida.jugadoresParaRobar.clear();
-      this.partida.faseJuego = FaseJuego.ACCIONES;
+      this.partida.faseJuego = this.faseRetornoLadron;
+      this.faseRetornoLadron = FaseJuego.ACCIONES;
     }
     
   };
@@ -1522,6 +1526,11 @@ export class CatanRoom extends Room {
       })
 
       sacarJugador(this.partida, this.tablero, this.banca, this.jugadores, client.sessionId);
+
+      //* Si la fase de robo se desbloqueo, no dejar una fase de retorno vieja
+      if (this.partida.faseJuego !== FaseJuego.ROBO) {
+        this.faseRetornoLadron = FaseJuego.ACCIONES;
+      }
 
       //* Actualizar el creador si era el que abandono
       if(eraCreador){
