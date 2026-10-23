@@ -64,7 +64,7 @@ function DescartarRecursos({
         </Typography>
         {!esSuTurnoDeDescartar && (
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Espera a que el jugador anterior termine de descartar.
+            No tienes que descartar. Espera a que los demas terminen.
           </Typography>
         )}
         <Stack spacing={1} sx={{ mt: 2 }}>
