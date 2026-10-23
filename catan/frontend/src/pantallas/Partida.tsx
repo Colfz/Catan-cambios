@@ -499,11 +499,10 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     sala.send('msgIntercambiarBanca', { recursoEntregado: entregado, recursoRecibido: recibido });
   }
 
-  function descartarRecurso(recurso: Recurso) {
-    const disponibles = estadoReal?.jugadores[miSessionId]?.recursos[recurso] ?? 0;
-    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null || disponibles < 1) return;
+  function descartarRecursos(recursos: Partial<Record<Recurso, number>>) {
+    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null) return;
     setDescarteEnEspera(descartesPendientes);
-    sala.send('msgDescartarRecursos', { recurso });
+    sala.send('msgDescartarRecursos', { recursos });
   }
 
   function lanzarDados() {
@@ -806,11 +805,12 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
           />
         </div>
         <DescartarRecursos
+          key={descartesPendientes}
           pendientes={descartesPendientes}
           recursos={estadoReal?.jugadores[miSessionId]?.recursos}
           esSuTurnoDeDescartar={esSuTurnoDeDescartar}
           enviando={descarteEnEspera !== null}
-          onDescartar={descartarRecurso}
+          onDescartarLote={descartarRecursos}
         />
           <ElegirRobo
           abierto={puedeRobar}
