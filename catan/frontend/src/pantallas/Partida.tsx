@@ -193,7 +193,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
         const usables = estado?.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CABALLERO] ?? 0;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
-        return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
+        // El caballero se puede jugar antes de lanzar los dados (DADOS) o despues (ACCIONES).
+        return estado.partida.faseJuego === FASE_JUEGO.ACCIONES
+          || estado.partida.faseJuego === FASE_JUEGO.DADOS ? anterior : null;
       });
 
       // La propuesta se confirma cuando aparece en el estado como mia.
@@ -351,7 +353,8 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     sala
       && esMiTurno
       && estadoReal?.partida.fase === FASE_PARTIDA.JUEGO
-      && estadoReal.partida.faseJuego === FASE_JUEGO.DADOS,
+      && estadoReal.partida.faseJuego === FASE_JUEGO.DADOS
+      && caballero === null,
   );
   // Se llega aqui tras sacar 7 o despues de que todos terminen de descartar.
   const puedeMoverLadron = Boolean(
@@ -392,9 +395,18 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     cartasUsables[CARTA.CABALLERO] + cartasUsables[CARTA.CARRETERAS]
       + cartasUsables[CARTA.ABUNDANCIA] + cartasUsables[CARTA.MONOPOLIO] > 0
   ));
-  // El backend permite una carta por turno y solo en la fase de acciones.
+  /* Antes de lanzar los dados (fase DADOS) solo se puede jugar el caballero;
+     el resto de cartas necesita la fase de acciones. */
+  const antesDeDados = Boolean(
+    sala
+      && esMiTurno
+      && partidaActual?.fase === FASE_PARTIDA.JUEGO
+      && partidaActual.faseJuego === FASE_JUEGO.DADOS,
+  );
+  const tieneCaballero = (cartasUsables?.[CARTA.CABALLERO] ?? 0) > 0;
+  // El backend permite una carta por turno, en acciones o (el caballero) antes de los dados.
   const puedeUsarCarta = Boolean(
-    puedePasarTurno
+    (puedePasarTurno || (antesDeDados && tieneCaballero))
       && partidaActual?.cartaJugable
       && tieneCartaUsable
       && caballero === null
@@ -487,11 +499,10 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     sala.send('msgIntercambiarBanca', { recursoEntregado: entregado, recursoRecibido: recibido });
   }
 
-  function descartarRecurso(recurso: Recurso) {
-    const disponibles = estadoReal?.jugadores[miSessionId]?.recursos[recurso] ?? 0;
-    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null || disponibles < 1) return;
+  function descartarRecursos(recursos: Partial<Record<Recurso, number>>) {
+    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null) return;
     setDescarteEnEspera(descartesPendientes);
-    sala.send('msgDescartarRecursos', { recurso });
+    sala.send('msgDescartarRecursos', { recursos });
   }
 
   function lanzarDados() {
@@ -665,6 +676,11 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
             jugadores={jugadores}
             ordenJugadores={ordenJugadores}
             miSessionId={miSessionId}
+            pendientesDescarte={
+              partidaActual?.faseJuego === FASE_JUEGO.DESCARTE
+                ? partidaActual.jugadoresParaDescartar
+                : undefined
+            }
           />
         </div>
         <div className="tablero" style={{ position: 'relative' }}>
@@ -794,11 +810,12 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
           />
         </div>
         <DescartarRecursos
+          key={descartesPendientes}
           pendientes={descartesPendientes}
           recursos={estadoReal?.jugadores[miSessionId]?.recursos}
           esSuTurnoDeDescartar={esSuTurnoDeDescartar}
           enviando={descarteEnEspera !== null}
-          onDescartar={descartarRecurso}
+          onDescartarLote={descartarRecursos}
         />
           <ElegirRobo
           abierto={puedeRobar}
@@ -810,6 +827,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
         <UsarCarta
           abierto={menuCartasAbierto && puedeUsarCarta}
           cartasUsables={cartasUsables}
+          soloCaballero={antesDeDados}
           onElegir={elegirCarta}
           onCerrar={() => setMenuCartasAbierto(false)}
         />

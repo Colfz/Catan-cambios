@@ -5,9 +5,11 @@ interface Props {
   jugadores: Jugadores;
   ordenJugadores: string[];
   miSessionId: string;
+  // Cartas que aun debe descartar cada jugador durante la fase DESCARTE
+  pendientesDescarte?: Record<string, number>;
 }
 
-function InfoJugadores({ jugadores, ordenJugadores, miSessionId }: Props) {
+function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDescarte }: Props) {
   const lista = ordenJugadores.length ? ordenJugadores : Object.keys(jugadores);
 
   return (
@@ -17,6 +19,7 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId }: Props) {
         if (!j) return null;
 
         const yo = id === miSessionId;
+        const porDescartar = pendientesDescarte?.[id] ?? 0;
 
         return (
           <div
@@ -42,6 +45,7 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId }: Props) {
                 className={enRiesgoDeDescarte(j) ? 'text-warning fw-bold' : 'text-white'}
               >
                 {totalRecursos(j)} recursos
+                {porDescartar > 0 && ` (descarta ${porDescartar})`}
               </span>
             </div>
           </div>

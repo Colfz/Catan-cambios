@@ -14,6 +14,7 @@ import { verificarVictoria } from "../functions/verificarVictoria.js";
 import { construirCiudad } from "../functions/construirCiudad.js";
 import { comerciarBanca } from "../functions/comerciarBanca.js";
 import { descartarRecurso } from "../functions/descartarRecurso.js";
+import { descartarRecursosLote } from "../functions/descartarRecursosLote.js";
 import { moverLadron } from "../functions/moverLadron.js";
 import { robarJugador } from "../functions/robarJugador.js";
 import { jugarCaballero } from "../functions/jugarCaballero.js";
@@ -25,6 +26,7 @@ import { jugarMonopolio } from "../functions/jugarMonopolio.js";
 import { siguienteTurnoPreconstruccion } from "../functions/siguienteTurnoPreconstruccion.js";
 import { comprarCarta } from "../functions/comprarCarta.js";
 import { sacarJugador } from "../functions/sacarJugador.js";
+import { faseTrasLadron } from "../functions/faseTrasLadron.js";
 
 
 export class CatanRoom extends Room {
@@ -36,6 +38,8 @@ export class CatanRoom extends Room {
   jugadores = this.state.jugadores;
   ofertas = new Map<string, unknown>();
   codigoAcceso = "";
+  //* Fase a la que se vuelve tras el robo (no se sincroniza con el cliente)
+  faseRetornoLadron: FaseJuego = FaseJuego.ACCIONES;
 
 
   messages = {
@@ -175,9 +179,23 @@ export class CatanRoom extends Room {
 
         });
 
+        //* Log de que salio 7
+        this.broadcast("log", {
+          jugador: this.jugadores.get(client.sessionId)?.nombre,
+          mensaje: " ha sacado 7, se mueve el ladron"
+        })
+
         //*Verificar si alguien tiene descarte, para enviarlo a fase de descarte
         if (this.partida.jugadoresParaDescartar.size > 0) {
           this.partida.faseJuego = FaseJuego.DESCARTE
+
+          //* Log de cada jugador que debe descartar
+          this.partida.jugadoresParaDescartar.forEach((cantidad, sessionId) => {
+            this.broadcast("log", {
+              jugador: this.jugadores.get(sessionId)?.nombre,
+              mensaje: ` debe descartar ${cantidad} cartas`
+            })
+          })
         } else {
           this.partida.faseJuego = FaseJuego.LADRON
         }
@@ -589,7 +607,7 @@ export class CatanRoom extends Room {
 
     msgDescartarRecursos: (
       client: Client,
-      mensaje: { recurso: string }
+      mensaje: { recurso?: string, recursos?: Record<string, number> }
     ) => {
       //* Verificar si estamos en fase de descarte
       if (this.partida.faseJuego !== FaseJuego.DESCARTE) {
@@ -610,12 +628,22 @@ export class CatanRoom extends Room {
       //* Encontrar al jugador que debe descartar
       const jugadorPorDescartar = client.sessionId;
 
-      //* Intentar descartar
-      const resultado = descartarRecurso(
-        this.jugadores.get(jugadorPorDescartar),
-        this.banca,
-        mensaje.recurso
-      );
+      //* Cartas que le faltan por descartar
+      const cartasDebidas = this.partida.jugadoresParaDescartar.get(jugadorPorDescartar);
+
+      //* Intentar descartar, por lote si llega "recursos" o una sola carta si llega "recurso"
+      const resultado = mensaje.recursos
+        ? descartarRecursosLote(
+          this.jugadores.get(jugadorPorDescartar),
+          this.banca,
+          mensaje.recursos,
+          cartasDebidas
+        )
+        : descartarRecurso(
+          this.jugadores.get(jugadorPorDescartar),
+          this.banca,
+          mensaje.recurso
+        );
 
 
       //*Error en descarte
@@ -630,7 +658,7 @@ export class CatanRoom extends Room {
       //*Actualizar la cantidad de recursos que le faltan por descartar
       this.partida.jugadoresParaDescartar.set(
         jugadorPorDescartar,
-        this.partida.jugadoresParaDescartar.get(jugadorPorDescartar) - 1
+        mensaje.recursos ? 0 : cartasDebidas - 1
       );
 
       //* Eliminarlo de la lista si ya no tiene que descartar
@@ -733,6 +761,9 @@ export class CatanRoom extends Room {
         return;
       }
 
+      //* El ladron por un 7 siempre vuelve a ACCIONES
+      this.faseRetornoLadron = FaseJuego.ACCIONES;
+
       //* Si hay 2 o mas jugadores involucrados, se pasa la lista de jugadores
       this.partida.jugadoresParaRobar.clear();
       this.partida.jugadoresParaRobar.push(...jugadoresinvolucrados);
@@ -761,10 +792,13 @@ export class CatanRoom extends Room {
         return;
       }
 
-      //* Verificar si estamos en la fase de acciones
-      if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
+      //* El caballero se puede jugar antes o despues de lanzar los dados
+      if (
+        this.partida.faseJuego !== FaseJuego.DADOS &&
+        this.partida.faseJuego !== FaseJuego.ACCIONES
+      ) {
         client.send("error", {
-          mensajeError: "Termina de lanzar los dados primero"
+          mensajeError: "No puedes jugar el caballero en este momento"
         })
         return;
       }
@@ -787,6 +821,9 @@ export class CatanRoom extends Room {
         })
         return;
       }
+
+      //* Recordar desde que fase se jugo el caballero
+      const faseOrigen = this.partida.faseJuego;
 
       //* Mover al ladron y obtener los jugadores involucrados
       const { h, d } = mensaje;
@@ -822,10 +859,11 @@ export class CatanRoom extends Room {
 
       //* Extraemos los jugadores involucrados en el robo
       const jugadoresInvolucrados = resultado.jugadoresInvolucrados;
+      const siguienteFase = faseTrasLadron(faseOrigen, jugadoresInvolucrados.length);
 
-      //* Si no hay jugadores, pasamos a las ACCIONES
+      //* Si no hay jugadores, volvemos a la fase de origen
       if (jugadoresInvolucrados.length == 0) {
-        this.partida.faseJuego = FaseJuego.ACCIONES;
+        this.partida.faseJuego = siguienteFase;
         return;
       }
 
@@ -835,9 +873,19 @@ export class CatanRoom extends Room {
           this.jugadores.get(client.sessionId),
           this.jugadores.get(jugadoresInvolucrados[0])
         )
-        this.partida.faseJuego = FaseJuego.ACCIONES;
+
+        //* Log del robo automatico
+        this.broadcast("log", {
+          jugador: this.jugadores.get(client.sessionId)?.nombre,
+          mensaje: ` ha robado un recurso a ${this.jugadores.get(jugadoresInvolucrados[0])?.nombre}`
+        })
+
+        this.partida.faseJuego = siguienteFase;
         return;
       }
+
+      //* Al terminar el robo se vuelve a la fase de origen
+      this.faseRetornoLadron = faseOrigen;
 
       //* Si hay 2 o mas jugadores involucrados, se pasa la lista de jugadores
       this.partida.jugadoresParaRobar.clear();
@@ -846,7 +894,7 @@ export class CatanRoom extends Room {
 
       //? Entramos a fase especial para decidir a quien robar
 
-      this.partida.faseJuego = FaseJuego.ROBO;
+      this.partida.faseJuego = siguienteFase;
     },
 
     msgIntercambiarJugador: (
@@ -1397,9 +1445,10 @@ export class CatanRoom extends Room {
         mensaje: ` ha robado un recurso a ${this.jugadores.get(mensaje.jugadorRobado)?.nombre}`
       })
 
-      //* Limpiar Lista y volver a acciones
+      //* Limpiar Lista y volver a la fase de origen (DADOS si fue un caballero antes de tirar)
       this.partida.jugadoresParaRobar.clear();
-      this.partida.faseJuego = FaseJuego.ACCIONES;
+      this.partida.faseJuego = this.faseRetornoLadron;
+      this.faseRetornoLadron = FaseJuego.ACCIONES;
     }
     
   };
@@ -1477,6 +1526,11 @@ export class CatanRoom extends Room {
       })
 
       sacarJugador(this.partida, this.tablero, this.banca, this.jugadores, client.sessionId);
+
+      //* Si la fase de robo se desbloqueo, no dejar una fase de retorno vieja
+      if (this.partida.faseJuego !== FaseJuego.ROBO) {
+        this.faseRetornoLadron = FaseJuego.ACCIONES;
+      }
 
       //* Actualizar el creador si era el que abandono
       if(eraCreador){
