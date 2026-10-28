@@ -9,7 +9,7 @@ export function verificarVictoria(
     sessionId: string,
     room: CatanRoom
 ) {
-    if (jugador.puntosParaGanar <= 0) {
+    if (jugador.privado.puntosParaGanar <= 0) {
         partida.ganador = sessionId;
         partida.fase = FasePartida.FINALIZADA
 

@@ -64,7 +64,7 @@ export function construirCiudad(
     eliminarRecursos(jugador, banca);
 
     jugador.puntuacion += 1;
-    jugador.puntosParaGanar -= 1;
+    jugador.privado.puntosParaGanar -= 1;
 
     //* Reintegrar el asentimiento y eliminar la ciudad
     jugador.construccionesDisponibles.set(
