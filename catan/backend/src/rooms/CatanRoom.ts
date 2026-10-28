@@ -1,4 +1,5 @@
 import { Room, Client, CloseCode, Delayed } from "colyseus";
+import { StateView } from "@colyseus/schema";
 import { CatanState } from "../states/CatanState.js";
 import { Jugador } from "../schemas/Jugador.js";
 import { Desarrollo, FaseJuego, FasePartida, FasePreconstruccion } from "../common/enums.js";
@@ -1482,6 +1483,7 @@ export class CatanRoom extends Room {
     this.partida.ordenJugadores.push(client.sessionId);
 
     this.jugadores.set(client.sessionId, new Jugador(options.nombre));
+    this.asignarVista(client);
 
     if (this.partida.creador == "") {
       this.partida.creador = client.sessionId;
@@ -1570,8 +1572,17 @@ export class CatanRoom extends Room {
     this.allowReconnection(client, 30);
   }
 
+  //* Cada cliente solo recibe el dato privado de su propio jugador (puntos de victoria ocultos)
+  asignarVista(client: Client) {
+    const jugador = this.jugadores.get(client.sessionId);
+    if (!jugador) return;
+    client.view = new StateView();
+    client.view.add(jugador.privado);
+  }
+
   onReconnect(client: Client) {
     console.log(`${client.sessionId} reconnected`);
+    this.asignarVista(client);
     //* Avisar que logro reconectarse
     this.broadcast("log", {
       jugador: "Sistema: ",
