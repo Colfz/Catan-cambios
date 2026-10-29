@@ -2,6 +2,7 @@ import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 import { FaseJuego, FasePartida, FasePreconstruccion } from "../common/enums.js";
 import { Jugador } from "./Jugador.js";
 import { OfertaIntercambio } from "./OfertaIntercambio.js";
+import { ResultadoJugador } from "./ResultadoJugador.js";
 
 export class Partida extends Schema {
   @type("string") creador: string;
@@ -18,6 +19,8 @@ export class Partida extends Schema {
   @type("string") ejercitoMasGrande: string;
   @type("uint8") carreterasGratis: number;
   @type(OfertaIntercambio) ofertaIntercambio = new OfertaIntercambio();
+  //* Se llena al ganar; ordenado de mayor a menor total
+  @type([ResultadoJugador]) resultadoFinal = new ArraySchema<ResultadoJugador>();
 
   constructor() {
     super();
