@@ -1,6 +1,6 @@
 import { Badge, Button, Card, ListGroup } from 'react-bootstrap';
 import type { Cartas, Jugador } from '../common/jugador';
-import { CARTA, NOMBRE_CARTA } from '../common/jugador';
+import { CARTA, NOMBRE_CARTA, puntosOcultos } from '../common/jugador';
 
 const CARTAS: { clave: keyof Cartas; icono: string }[] = [
   { clave: CARTA.CABALLERO,       icono: '/svg/caballero.svg' },
@@ -35,7 +35,7 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
                 <ListGroup.Item
                   key={clave}
                   title={esPuntoVictoria
-                    ? 'Su efecto es inmediato y no se puede jugar'
+                    ? 'Punto de victoria oculto: suma en cuanto la compras, no se juega y solo tú lo ves hasta ganar'
                     : NOMBRE_CARTA[clave]}
                   className="d-flex align-items-center gap-2 py-0"
                 >
@@ -49,7 +49,8 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
                       +{nuevas}
                     </Badge>
                   )}
-                  <span className="fw-bold">{esPuntoVictoria ? usables + nuevas : usables}</span>
+                  {/* Las cartas de victoria ya no van en los mapas de cartas: viven en el dato privado */}
+                  <span className="fw-bold">{esPuntoVictoria ? puntosOcultos(miJugador) : usables}</span>
                 </ListGroup.Item>
               );
             })}
