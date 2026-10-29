@@ -1,5 +1,5 @@
 import type { Jugadores } from '../common/jugador';
-import { totalCartas, totalRecursos, enRiesgoDeDescarte, colorDeJugador } from '../common/jugador';
+import { totalCartas, totalRecursos, enRiesgoDeDescarte, colorDeJugador, puntosOcultos } from '../common/jugador';
 
 interface Props {
   jugadores: Jugadores;
@@ -20,6 +20,8 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDesca
 
         const yo = id === miSessionId;
         const porDescartar = pendientesDescarte?.[id] ?? 0;
+        // Solo el dueno recibe sus puntos ocultos; los rivales ven la puntuacion publica.
+        const ocultos = yo ? puntosOcultos(j) : 0;
 
         return (
           <div
@@ -31,7 +33,12 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDesca
               <span className="flex-grow-1 text-truncate text-white fw-semibold">
                 {yo && '(Yo) '}{j.nombre}
               </span>
-              <span className="fw-bold flex-shrink-0 text-white">{j.puntuacion}/10</span>
+              <span
+                className="fw-bold flex-shrink-0 text-white"
+                title={ocultos > 0 ? 'Cartas de punto de victoria: solo tú las ves hasta ganar' : undefined}
+              >
+                {j.puntuacion}/10{ocultos > 0 && ` (+${ocultos} ocultos)`}
+              </span>
             </div>
             <div className="d-flex justify-content-between text-white">
               <span title="Cartas de desarrollo en la mano, usables mas inusables">
