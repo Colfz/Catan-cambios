@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { MapSchema } from "@colyseus/schema";
 import { Desarrollo, FasePartida } from "../src/common/enums.js";
 import { Jugador } from "../src/schemas/Jugador.js";
 import { Banca } from "../src/schemas/Banca.js";
@@ -60,7 +61,7 @@ describe("carta de punto de victoria", () => {
 describe("verificarVictoria con puntos ocultos", () => {
     function salaFalsa() {
         const logs: unknown[] = [];
-        return { room: { broadcast: (_tipo: string, mensaje: unknown) => logs.push(mensaje) } as never, logs };
+        return { room: { jugadores: new MapSchema<Jugador>(), broadcast: (_tipo: string, mensaje: unknown) => logs.push(mensaje) } as never, logs };
     }
 
     it("gana cuando los puntos que faltan llegan a 0", () => {
