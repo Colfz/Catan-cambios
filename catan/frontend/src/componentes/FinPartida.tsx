@@ -31,8 +31,12 @@ function FinPartida({
             maxWidth="sm"
             aria-labelledby="fin-partida-titulo"
         >
-            <DialogTitle id="fin-partida-titulo" className="text-center">
-                🏆 Partida finalizada
+            <DialogTitle
+                id="fin-partida-titulo"
+                className="text-center d-flex align-items-center justify-content-center gap-2"
+            >
+                <img src="/svg/trofeo.svg" alt="" aria-hidden="true" width={32} height={32} />
+                Partida finalizada
             </DialogTitle>
             <DialogContent className="text-center">
                 <Typography variant="h5" component="p" className="fw-bold">
@@ -62,7 +66,15 @@ function FinPartida({
                                                 scope="row"
                                                 sx={{ fontWeight: esGanador ? 'bold' : undefined }}
                                             >
-                                                {esGanador && '🏆 '}
+                                                {esGanador && (
+                                                    <img
+                                                        src="/svg/trofeo.svg"
+                                                        alt="Ganador"
+                                                        width={18}
+                                                        height={18}
+                                                        style={{ verticalAlign: 'text-bottom', marginRight: 4 }}
+                                                    />
+                                                )}
                                                 {resultado.nombre}
                                                 {soyYo && ' (tú)'}
                                             </TableCell>
