@@ -68,12 +68,15 @@ export const NOMBRE_PIEZA: Record<string, string> = {
 /* el jugador
    La clave del mapa es el sessionId que Colyseus le asigna a cada cliente.
    Los nueve campos son copia literal de backend/src/schemas/Jugador.ts. Lo
-   unico que el backend NO manda es el color: se calcula abajo. */
+   unico que el backend NO manda es el color: se calcula abajo.
+   Ojo: privado solo llega para MI jugador; en los rivales es undefined. */
 
 export interface Jugador {
   nombre: string;
   puntuacion: number;
-  puntosParaGanar: number;
+  /* Solo lo recibe su dueno (StateView en el backend). puntosVictoria son las
+     cartas de punto de victoria compradas, ocultas a los rivales hasta ganar. */
+  privado?: { puntosParaGanar: number; puntosVictoria: number };
   recursos: Recursos;
   /* Son dos mapas separados: las inusables se compraron este turno y pasan a
      usables al pasar el turno. No los junten en uno solo. */
@@ -121,6 +124,11 @@ export function totalRecursos(jugador: Jugador): number {
 // Cartas de desarrollo en la mano, se puedan jugar ahora o no.
 export function totalCartas(jugador: Jugador): number {
   return sumar(jugador.cartas_usables) + sumar(jugador.cartas_inusables);
+}
+
+// Puntos de victoria ocultos. Solo el dueno los conoce; para un rival da 0.
+export function puntosOcultos(jugador: Jugador): number {
+  return jugador.privado?.puntosVictoria ?? 0;
 }
 
 // Todas las cartas en la mano: recursos mas desarrollo.

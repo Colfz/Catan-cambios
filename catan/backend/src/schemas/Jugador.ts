@@ -1,5 +1,6 @@
-import { MapSchema, Schema, type } from "@colyseus/schema"
+import { MapSchema, Schema, type, view } from "@colyseus/schema"
 import { Terreno } from "../common/enums.js";
+import { PrivadoJugador } from "./PrivadoJugador.js";
 import { generarRecursos } from "../generators/generarRecursos.js";
 import { generarCartas } from "../generators/generarCartas.js";
 import { generarConstruccionesDisponibles } from "../generators/generarConstruccionesDisponibles.js";
@@ -7,7 +8,8 @@ import { generarConstruccionesDisponibles } from "../generators/generarConstrucc
 export class Jugador extends Schema {
     @type("string") nombre: string;
     @type("uint16") puntuacion: number;
-    @type("uint16") puntosParaGanar: number;
+    //* Solo lo recibe su dueno (ver asignarVista en CatanRoom)
+    @view() @type(PrivadoJugador) privado = new PrivadoJugador();
     @type({ map: "uint8" }) recursos = new MapSchema<number>();
     @type({ map: "uint8" }) cartas_usables = new MapSchema<number>();
     @type({ map: "uint8" }) cartas_inusables = new MapSchema<number>();
@@ -20,7 +22,6 @@ export class Jugador extends Schema {
         super();
         this.nombre = nombre;
         this.puntuacion = 0;
-        this.puntosParaGanar = 10;
         this.ultimoAsentamiento = "";
         this.caballerosJugados = 0;
         generarRecursos(this.recursos);

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="250" height="250" role="img">
+  <title>Trofeo</title>
+  <!-- Asas de la copa -->
+  <path d="M28,22 H14 Q12,46 34,52" fill="none" stroke="#B7950B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M72,22 H86 Q88,46 66,52" fill="none" stroke="#B7950B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Copa, mismos colores que puntosVictoria.svg -->
+  <path d="M26,12 H74 V30 Q74,60 50,62 Q26,60 26,30 Z"
+        fill="#F1C40F" stroke="#B7950B" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Pie y base -->
+  <rect x="44" y="62" width="12" height="14" fill="#F1C40F" stroke="#B7950B" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="28" y="76" width="44" height="12" rx="2" fill="#F1C40F" stroke="#B7950B" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Estrella de punto de victoria en la copa -->
+  <polygon points="50,22 54,32 64,33 56,40 59,50 50,44 41,50 44,40 36,33 46,32" fill="#2C3E50"/>
+</svg>

@@ -45,9 +45,11 @@ function sacarCarta(jugador: Jugador, banca: Banca): void {
     //* sacar la carta de la banca
     const carta = banca.cartas.shift();
 
-    //? CARTA DE PUNTOS DE VICTORIA
+    //? CARTA DE PUNTOS DE VICTORIA: queda oculta en el dato privado del jugador
     if (carta === Desarrollo.PUNTOS_VICTORIA) {
-        jugador.puntosParaGanar -= 1;
+        jugador.privado.puntosVictoria += 1;
+        jugador.privado.puntosParaGanar -= 1;
+        return;
     }
 
     //* agregar la carta al jugador
