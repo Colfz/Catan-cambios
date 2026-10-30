@@ -36,6 +36,23 @@ export interface DatosPartida {
 
   // La oferta de intercambio que este sobre la mesa ahora mismo.
   ofertaIntercambio: Oferta;
+
+  /* Se llena cuando alguien gana, ordenado de mayor a menor total. Vacio
+     mientras la partida siga. */
+  resultadoFinal: ResultadoJugador[];
+}
+
+/* schemas/ResultadoJugador.ts — lo que se revela de cada jugador al terminar
+   la partida, incluidas las cartas de punto de victoria que estaban ocultas. */
+export interface ResultadoJugador {
+  sessionId: string;
+  nombre: string;
+  // Los puntos que todos veian durante la partida.
+  puntosPublicos: number;
+  // Cartas de punto de victoria que estaban ocultas.
+  cartasVictoria: number;
+  // puntosPublicos + cartasVictoria.
+  total: number;
 }
 
 /* schemas/OfertaIntercambio.ts — un jugador propone cambiar recursos y los
