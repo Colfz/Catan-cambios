@@ -1,5 +1,5 @@
 import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
-import { FaseJuego, FasePartida, FasePreconstruccion } from "../common/enums.js";
+import { FaseJuego, FasePartida, FasePreconstruccion, Ritmo } from "../common/enums.js";
 import { Jugador } from "./Jugador.js";
 import { OfertaIntercambio } from "./OfertaIntercambio.js";
 import { ResultadoJugador } from "./ResultadoJugador.js";
@@ -21,6 +21,10 @@ export class Partida extends Schema {
   @type(OfertaIntercambio) ofertaIntercambio = new OfertaIntercambio();
   //* Se llena al ganar; ordenado de mayor a menor total
   @type([ResultadoJugador]) resultadoFinal = new ArraySchema<ResultadoJugador>();
+  //* Segundos que quedan en la etapa actual (0 si no hay limite)
+  @type("uint16") tiempoRestante: number;
+  //* Ritmo elegido al crear la sala
+  @type("uint8") ritmo: Ritmo;
 
   constructor() {
     super();
@@ -35,5 +39,7 @@ export class Partida extends Schema {
     this.ganador = "";
     this.ejercitoMasGrande = "";
     this.carreterasGratis = 0;
+    this.tiempoRestante = 0;
+    this.ritmo = Ritmo.NORMAL;
   }
 }
