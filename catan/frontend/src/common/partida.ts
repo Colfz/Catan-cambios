@@ -40,6 +40,12 @@ export interface DatosPartida {
   /* Se llena cuando alguien gana, ordenado de mayor a menor total. Vacio
      mientras la partida siga. */
   resultadoFinal: ResultadoJugador[];
+
+  // Segundos que quedan en la etapa actual. 0 si no hay limite de tiempo.
+  tiempoRestante: number;
+
+  // Ritmo elegido al crear la sala. Ver RITMO en common/fases.ts.
+  ritmo: number;
 }
 
 /* schemas/ResultadoJugador.ts — lo que se revela de cada jugador al terminar
