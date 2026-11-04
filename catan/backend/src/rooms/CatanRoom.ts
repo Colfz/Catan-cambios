@@ -28,6 +28,9 @@ import { siguienteTurnoPreconstruccion } from "../functions/siguienteTurnoPrecon
 import { comprarCarta } from "../functions/comprarCarta.js";
 import { sacarJugador } from "../functions/sacarJugador.js";
 import type { Resultado, SalaAutomatica } from "../functions/automaticos/tipos.js";
+import { ejecutarAutomatico } from "../functions/automaticos/despachador.js";
+import { Temporizador } from "../functions/temporizador.js";
+import { Etapa, tiempoDeEtapa } from "../functions/ritmos.js";
 import { faseTrasLadron } from "../functions/faseTrasLadron.js";
 
 
@@ -42,6 +45,14 @@ export class CatanRoom extends Room implements SalaAutomatica {
   codigoAcceso = "";
   //* Fase a la que se vuelve tras el robo (no se sincroniza con el cliente)
   faseRetornoLadron: FaseJuego = FaseJuego.ACCIONES;
+
+  //* Tiempo limite de cada etapa del turno (se publica en partida.tiempoRestante)
+  private temporizador = new Temporizador(
+    (restante) => { this.partida.tiempoRestante = restante; },
+    () => this.alVencerTiempo()
+  );
+  //* Identifica la etapa en curso; si cambia, el temporizador vuelve a empezar
+  private llaveEtapa = "";
 
 
   messages = {
@@ -236,6 +247,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
 
       //* Cerar la sala para que nadie pueda entrar
       this.lock();
+
+      //* Empieza el tiempo de la primera etapa
+      this.sincronizarTemporizador();
     },
 
     msgPasarTurno: (client: Client) => {
@@ -927,6 +941,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
         mensajeError: resultado.mensaje
       })
     }
+
+    //* La accion pudo cambiar la etapa o el turno
+    this.sincronizarTemporizador();
   }
 
   ejecutarLanzarDados(sessionId: string): Resultado {
@@ -1423,10 +1440,81 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
 
+  //* ---------------------------------------------------------------------
+  //* Temporizador de etapas
+  //* ---------------------------------------------------------------------
+
+  //* Etapa con tiempo limite en este momento. null si no hay (lobby o partida terminada)
+  private etapaActual(): Etapa | null {
+    if (this.partida.fase === FasePartida.PRECONSTRUCCION) return Etapa.COLOCACION;
+    if (this.partida.fase !== FasePartida.JUEGO) return null;
+
+    switch (this.partida.faseJuego) {
+      case FaseJuego.DADOS: return Etapa.DADOS;
+      case FaseJuego.ACCIONES: return Etapa.ACCIONES;
+      case FaseJuego.LADRON: return Etapa.LADRON;
+      case FaseJuego.ROBO: return Etapa.ROBO;
+      case FaseJuego.DESCARTE: return Etapa.DESCARTE;
+      case FaseJuego.CARRETERAS: return Etapa.CARRETERAS;
+      default: return null;
+    }
+  }
+
+  //* Reinicia el conteo cuando cambia la etapa o el turno, y lo detiene si ya no hay etapa.
+  //* Con forzar se reinicia aunque la etapa sea la misma.
+  sincronizarTemporizador(forzar = false) {
+    const etapa = this.etapaActual();
+
+    if (etapa === null) {
+      this.llaveEtapa = "";
+      this.temporizador.detener();
+      return;
+    }
+
+    const llave = [
+      this.partida.turnoActual,
+      this.partida.fase,
+      this.partida.faseJuego,
+      this.partida.fasePreconstruccion,
+      this.partida.direccionPreconstruccion
+    ].join("|");
+
+    if (!forzar && llave === this.llaveEtapa) return;
+
+    this.llaveEtapa = llave;
+    //* Con el ritmo "Sin limite" el tiempo es 0 y no se cuenta nada
+    this.temporizador.iniciar(tiempoDeEtapa(this.partida.ritmo, etapa));
+  }
+
+  //* Cada segundo
+  tick() {
+    this.sincronizarTemporizador();
+    this.temporizador.tick();
+  }
+
+  //* Se acabo el tiempo: el servidor actua por el jugador
+  private alVencerTiempo() {
+    const etapa = this.etapaActual();
+
+    if (etapa !== null) {
+      try {
+        ejecutarAutomatico(this, etapa);
+      } catch (error) {
+        console.error("Fallo la accion automatica", error);
+      }
+    }
+
+    //* Siempre se vuelve a contar, cambie o no la etapa, para que la partida no quede parada
+    this.sincronizarTemporizador(true);
+  }
+
   onCreate(options: any) {
     console.log("room created!", this.roomId);
     //* si se ingresa codigo de acceso, se setea al atributo de codigo de acceso a la sala
     this.codigoAcceso = options.codigoAcceso || ""
+
+    //* Cada segundo avanza el temporizador de la etapa
+    this.clock.setInterval(() => this.tick(), 1000);
 
     //* seteamos la data de la sala
     this.setMetadata({
@@ -1486,7 +1574,7 @@ export class CatanRoom extends Room implements SalaAutomatica {
     }
 
     //* Si ya se estaba jugando se debe eliminar completamente
-    if(this.partida.fase === FasePartida.JUEGO || FasePartida.PRECONSTRUCCION){
+    if (this.partida.fase === FasePartida.JUEGO || this.partida.fase === FasePartida.PRECONSTRUCCION) {
       //* Ver si era el creador de la sala
       const eraCreador = this.partida.creador === client.sessionId;
       
@@ -1497,6 +1585,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
       })
 
       sacarJugador(this.partida, this.tablero, this.banca, this.jugadores, client.sessionId);
+
+      //* Al salir puede cambiar el turno o la etapa, o terminar la partida
+      this.sincronizarTemporizador();
 
       //* Si la fase de robo se desbloqueo, no dejar una fase de retorno vieja
       if (this.partida.faseJuego !== FaseJuego.ROBO) {
@@ -1512,7 +1603,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       }
 
       //* Si al sacarlo se gana avisar
-      if (this.partida.fase === FasePartida.FINALIZADA){
+      //* sacarJugador puede haber terminado la partida (el tipo ya no lo sabe)
+      if ((this.partida.fase as FasePartida) === FasePartida.FINALIZADA){
         this.broadcast("log", {
           jugador: "Sistema: ",
           mensaje: `${this.jugadores.get(this.partida.ganador)?.nombre} gana por abandono...`
@@ -1523,6 +1615,7 @@ export class CatanRoom extends Room implements SalaAutomatica {
 
   onDispose() {
     console.log("room", this.roomId, "disposing...");
+    this.temporizador.detener();
   }
 
   //* Si un cliente se desconecta tiene 30 segundos para reconectarse
