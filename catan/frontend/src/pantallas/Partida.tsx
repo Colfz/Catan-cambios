@@ -111,6 +111,10 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
   const [caminoGratisEnEspera, setCaminoGratisEnEspera] = useState<number | null>(null);
   // true mientras se esta en la fase CARRETERAS en mi turno (modo camino activo).
   const modoCaminosGratis = useRef(false);
+  /* Turno y etapa de la ultima lectura del estado. Si cambian (porque jugue o
+     porque el servidor actuo al acabarse el tiempo) se cierra lo que haya
+     quedado abierto. */
+  const etapaPrevia = useRef<string | null>(null);
   // true desde que se envia la propuesta hasta que el servidor la publica.
   const [propuestaEnEspera, setPropuestaEnEspera] = useState(false);
   // true desde que se responde la propuesta hasta que el servidor lo registra.
@@ -241,6 +245,30 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
         const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CARRETERAS] ?? 0;
         return estado.partida.faseJuego === FASE_JUEGO.CARRETERAS || usables < anterior ? null : anterior;
       });
+
+      /* Al cambiar el turno o la etapa se cierra lo que haya quedado abierto: la
+         construccion elegida, el menu de cartas, el dialogo de banca y los pasos
+         "eligiendo" de las cartas. Va antes del bloque de caminos gratis para que
+         entrar en CARRETERAS siga activando el modo camino. */
+      const etapa = estado
+        ? [
+          estado.partida.turnoActual,
+          estado.partida.fase,
+          estado.partida.faseJuego,
+          estado.partida.fasePreconstruccion,
+        ].join("|")
+        : null;
+      if (etapaPrevia.current !== null && etapa !== etapaPrevia.current) {
+        setTipoConstruccion(null);
+        setObjetivoConstruccion(null);
+        setEstadoConstruccion("");
+        setMenuCartasAbierto(false);
+        setIntercambioAbierto(false);
+        setCaballero((anterior) => (anterior === "eligiendo" ? null : anterior));
+        setAbundancia((anterior) => (anterior === "eligiendo" ? null : anterior));
+        setMonopolio((anterior) => (anterior === "eligiendo" ? null : anterior));
+      }
+      etapaPrevia.current = etapa;
 
       /* Caminos gratis: al entrar a la fase CARRETERAS en mi turno se activa
          solo el modo "camino" (se ven las aristas para elegir); al salir (el
