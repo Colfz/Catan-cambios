@@ -127,12 +127,15 @@ describe("temporizador en la sala", () => {
 
     it("al vencer el tiempo la cuenta vuelve a empezar aunque nada cambie", async () => {
         const sala = await salaEnJuego(Ritmo.RAPIDO);
+        //* Sin victimas en la lista, la accion automatica de robo no puede hacer nada
+        sala.partida.faseJuego = FaseJuego.ROBO;
         sala.sincronizarTemporizador();
 
-        for (let i = 0; i < 23; i++) sala.tick();
+        for (let i = 0; i < 15; i++) sala.tick();
 
         assert.equal(sala.partida.fase, FasePartida.JUEGO);
-        assert.equal(sala.partida.tiempoRestante, 23);
+        assert.equal(sala.partida.faseJuego, FaseJuego.ROBO);
+        assert.equal(sala.partida.tiempoRestante, 15);
     });
 
     it("onLeave con la partida terminada no vuelve a sacar al jugador", async () => {
