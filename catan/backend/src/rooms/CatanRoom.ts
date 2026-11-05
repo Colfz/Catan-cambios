@@ -30,7 +30,7 @@ import { sacarJugador } from "../functions/sacarJugador.js";
 import type { Resultado, SalaAutomatica } from "../functions/automaticos/tipos.js";
 import { ejecutarAutomatico } from "../functions/automaticos/despachador.js";
 import { Temporizador } from "../functions/temporizador.js";
-import { Etapa, tiempoDeEtapa } from "../functions/ritmos.js";
+import { Etapa, ritmoValido, tiempoDeEtapa } from "../functions/ritmos.js";
 import { faseTrasLadron } from "../functions/faseTrasLadron.js";
 
 
@@ -1512,6 +1512,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
     console.log("room created!", this.roomId);
     //* si se ingresa codigo de acceso, se setea al atributo de codigo de acceso a la sala
     this.codigoAcceso = options.codigoAcceso || ""
+
+    //* El ritmo lo elige quien crea la sala y decide el tiempo de cada etapa
+    this.partida.ritmo = ritmoValido(options.ritmo);
 
     //* Cada segundo avanza el temporizador de la etapa
     this.clock.setInterval(() => this.tick(), 1000);
