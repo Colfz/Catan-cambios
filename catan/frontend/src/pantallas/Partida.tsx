@@ -25,7 +25,7 @@ import Construir, {
   type SolicitudConstruccion,
   type TipoConstruccion,
 } from '../componentes/construir';
-import { FASE_JUEGO, FASE_PARTIDA, FASE_PRECONSTRUCCION } from '../common/fases';
+import { FASE_JUEGO, FASE_PARTIDA, FASE_PRECONSTRUCCION, RITMO } from '../common/fases';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -819,6 +819,13 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
             sessionIdTurno={turnoActual}
             jugadores={jugadores}
             ordenJugadores={ordenJugadores}
+            tiempoRestante={partidaActual?.tiempoRestante ?? 0}
+            mostrarTiempo={Boolean(
+              partidaActual
+                && (partidaActual.fase === FASE_PARTIDA.PRECONSTRUCCION || partidaActual.fase === FASE_PARTIDA.JUEGO)
+                && partidaActual.ritmo !== RITMO.SIN_LIMITE
+                && partidaActual.tiempoRestante > 0,
+            )}
           />
           <Button
             className="flex-fill"
