@@ -8,6 +8,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
+import { NOMBRE_RITMO, type Ritmo } from "../../common/fases";
 import { COLORES } from "../../common/jugador";
 import type { InfoSala } from "../sesionGuardada";
 
@@ -51,6 +52,8 @@ function SalaEspera({
   const [copiado, setCopiado] = useState<Copiado>(null);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const puedeIniciar = jugadores.length >= minJugadores;
+  // El ritmo lo eligio quien creo la sala y viaja en el estado de la partida.
+  const ritmo = room.state?.partida?.ritmo as Ritmo | undefined;
 
   useEffect(() => () => {
     if (temporizador.current) clearTimeout(temporizador.current);
@@ -85,6 +88,9 @@ function SalaEspera({
                 variant="outlined"
                 size="small"
               />
+            )}
+            {ritmo !== undefined && NOMBRE_RITMO[ritmo] && (
+              <Chip label={`⏱️ Ritmo: ${NOMBRE_RITMO[ritmo]}`} color="default" variant="outlined" size="small" />
             )}
           </div>
 
