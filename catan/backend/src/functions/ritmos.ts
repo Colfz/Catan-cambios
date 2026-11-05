@@ -31,9 +31,9 @@ export function tiempoDeEtapa(ritmo: Ritmo, etapa: Etapa): number {
 
 //* Ritmo que pidio quien crea la sala. Si no llega o no es valido, se usa el Normal
 export function ritmoValido(valor: unknown): Ritmo {
-  const numero = typeof valor === "string" ? Number(valor) : valor;
-  if (numero === Ritmo.NORMAL || numero === Ritmo.RAPIDO || numero === Ritmo.SIN_LIMITE) {
-    return numero;
-  }
-  return Ritmo.NORMAL;
+    const numero = typeof valor === "string" ? Number(valor) : valor;
+    if (numero === Ritmo.NORMAL || numero === Ritmo.RAPIDO || numero === Ritmo.SIN_LIMITE) {
+        return numero;
+    }
+    return Ritmo.NORMAL;
 }

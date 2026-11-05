@@ -90,7 +90,7 @@ function SalaEspera({
               />
             )}
             {ritmo !== undefined && NOMBRE_RITMO[ritmo] && (
-              <Chip label={`⏱️ Ritmo: ${NOMBRE_RITMO[ritmo]}`} color="default" variant="outlined" size="small" />
+              <Chip label={`Ritmo: ${NOMBRE_RITMO[ritmo]}`} color="default" variant="outlined" size="small" />
             )}
           </div>
 

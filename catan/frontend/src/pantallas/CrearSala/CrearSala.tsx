@@ -34,8 +34,8 @@ export interface DatosNuevaSala {
 
 // Lo que significa cada ritmo, para que quien crea la sala sepa que elige.
 const DESCRIPCION_RITMO: Record<Ritmo, string> = {
-  [RITMO.NORMAL]: "Tiempo cómodo en cada etapa. Si alguien se queda quieto, el servidor juega por él.",
-  [RITMO.RAPIDO]: "La mitad del tiempo en cada etapa. Si alguien se queda quieto, el servidor juega por él.",
+  [RITMO.NORMAL]: "Tiempo cómodo en cada etapa. Si alguien se queda quieto, el servidor juega en su lugar.",
+  [RITMO.RAPIDO]: "La mitad del tiempo en cada etapa. Si alguien se queda quieto, el servidor juega en su lugar.",
   [RITMO.SIN_LIMITE]: "Sin contador ni acciones automáticas. La partida espera a cada jugador.",
 };
 
