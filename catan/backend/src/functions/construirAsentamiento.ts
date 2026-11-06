@@ -142,7 +142,7 @@ function eliminarRecursos(jugador:Jugador, banca:Banca){
 
 }
 
-function verticesPos0(vertices: MapSchema<Vertice>, h:number, d:number){
+export function verticesPos0(vertices: MapSchema<Vertice>, h:number, d:number){
     const v1 = vertices.get(`${h},${d},${1}`);
     const v2 = vertices.get(`${h+1},${d},${1}`);
     const v3 = vertices.get(`${h+1},${d-1},${1}`);
@@ -153,7 +153,7 @@ function verticesPos0(vertices: MapSchema<Vertice>, h:number, d:number){
     return true;
 }
 
-function verticesPos1(vertices: MapSchema<Vertice>, h:number, d:number){
+export function verticesPos1(vertices: MapSchema<Vertice>, h:number, d:number){
     const v1 = vertices.get(`${h},${d},${0}`);
     const v2 = vertices.get(`${h-1},${d},${0}`);
     const v3 = vertices.get(`${h-1},${d+1},${0}`);
