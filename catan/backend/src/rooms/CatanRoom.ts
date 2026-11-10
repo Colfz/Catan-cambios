@@ -86,13 +86,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { recursoEntregado: string, recursoRecibido: string }
     ) => {
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Turno del jugador (esta accion no comprueba si la partida termino)
+      if (this.rechazarTurno(client, false)) return;
 
       //* Verificar que estemos en la fase de acciones
       if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
@@ -135,21 +130,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { h: number, d: number, p: number }
     ) => {
-      //* Verificar que la partida siga un curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        })
-        return;
-      }
-
-      //*Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       //* Verificar que estemos en la fase de juego
       if (this.partida.fase !== FasePartida.JUEGO) {
@@ -288,21 +270,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { h: number, d: number }
     ) => {
-      //* Verificar que la partida siga en curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        })
-        return;
-      }
-
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       //* El caballero se puede jugar antes o despues de lanzar los dados
       if (
@@ -418,13 +387,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
         cantidadRecibida: number,
       }
     ) => {
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Turno del jugador (esta accion no comprueba si la partida termino)
+      if (this.rechazarTurno(client, false)) return;
 
       // * Verificar que estemos en la fase de acciones
       if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
@@ -594,21 +558,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
     },
 
     msgComprarCarta: (client: Client) => {
-        //* Verificar que la partida siga en curso
-        if(this.partida.fase === FasePartida.FINALIZADA){
-            client.send("error", {
-                mensajeError: "La partida ha finalizado"
-            })
-            return;
-        }
-
-        //* Verificar que sea el turno del jugador
-        if(this.partida.turnoActual !== client.sessionId){
-            client.send("error", {
-                mensajeError: "No es tu turno"
-            })
-            return;
-        }
+        //* Partida en curso y turno del jugador
+        if (this.rechazarTurno(client)) return;
 
         //* Verificar que estamos en fase de acciones
         if(this.partida.faseJuego !== FaseJuego.ACCIONES){
@@ -645,20 +596,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
 
     msgCartaCarreteras: (client: Client) => {
       // * Verificar que la partida siga en curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        })
-        return;
-      }
-
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       //* Verificar que se permita usar carta
       if(!this.partida.cartaJugable){
@@ -709,21 +648,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { h: number, d: number, p: number }
     ) => {
-      // * Verificar que la partida siga en curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        })
-        return;
-      }
-
-      // * Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       // * Verificar que estemos en la fase de carretera
       if (this.partida.faseJuego !== FaseJuego.CARRETERAS) {
@@ -768,21 +694,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { recurso1: string, recurso2: string }
     ) => {
-      //* Verificar que la partida siga en curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        })
-        return;
-      }
-
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        })
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       //* Verificar que estamos en fase de acciones
       if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
@@ -841,21 +754,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
       client: Client,
       mensaje: { recurso: string }
     ) => {
-      //* Verificar que la partida siga en curso
-      if (this.partida.fase === FasePartida.FINALIZADA) {
-        client.send("error", {
-          mensajeError: "La partida ha finalizado"
-        });
-        return;
-      }
-
-      //* Verificar que sea el turno del jugador
-      if (this.partida.turnoActual !== client.sessionId) {
-        client.send("error", {
-          mensajeError: "No es tu turno"
-        });
-        return;
-      }
+      //* Partida en curso y turno del jugador
+      if (this.rechazarTurno(client)) return;
 
       //* Verificar que estamos en fase de acciones
       if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
@@ -934,6 +834,26 @@ export class CatanRoom extends Room implements SalaAutomatica {
     return { error: true, mensaje };
   }
 
+  //* La validacion que comparten casi todas las acciones: la partida sigue en curso
+  //* y es el turno del jugador. Con partidaEnCurso en false solo se comprueba el turno.
+  //* Devuelve el error, o null si se puede seguir
+  private validarTurno(sessionId: string, partidaEnCurso = true): Resultado | null {
+    if (partidaEnCurso && this.partida.fase === FasePartida.FINALIZADA) {
+      return this.fallo("La partida ha finalizado");
+    }
+    if (this.partida.turnoActual !== sessionId) {
+      return this.fallo("No es tu turno");
+    }
+    return null;
+  }
+
+  //* validarTurno para los mensajes: si falla, avisa al cliente y devuelve true
+  private rechazarTurno(client: Client, partidaEnCurso = true): boolean {
+    const rechazo = this.validarTurno(client.sessionId, partidaEnCurso);
+    if (rechazo) this.responder(client, rechazo);
+    return rechazo !== null;
+  }
+
   //* Si la accion falla, avisa de ese error solo al cliente que la pidio
   private responder(client: Client, resultado: Resultado) {
     if (resultado.error) {
@@ -947,15 +867,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarLanzarDados(sessionId: string): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //* Verificar que sea el turno del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     //* Verificar que estemos en la fase de juego
     if (this.partida.fase !== FasePartida.JUEGO) {
@@ -1046,15 +960,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarPasarTurno(sessionId: string): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //* Verificar que sea tu turno
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     //* Solo se puede pasar turno en fase de acciones
     if (this.partida.faseJuego !== FaseJuego.ACCIONES) {
@@ -1083,15 +991,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarColocarAsentamiento(sessionId: string, h: number, d: number, p: number): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //*Verificar que el turno sea del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     const jugador = this.jugadores.get(sessionId);
     if (!jugador) return this.exito();
@@ -1170,15 +1072,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarColocarCamino(sessionId: string, h: number, d: number, p: number): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //* Verificar que sea el turno del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     //* Obtener el jugador del state y que exista
     const jugador = this.jugadores.get(sessionId);
@@ -1311,10 +1207,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarMoverLadron(sessionId: string, h: number, d: number): Resultado {
-    //* Verificar que sea el turno del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Turno del jugador (esta accion no comprueba si la partida termino)
+    const rechazo = this.validarTurno(sessionId, false);
+    if (rechazo) return rechazo;
 
     //*Verificar que estemos en la fase de juego
     if (this.partida.fase !== FasePartida.JUEGO) {
@@ -1381,15 +1276,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
   }
 
   ejecutarRobar(sessionId: string, victima: string): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //* Verificar que sea el turno del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     //* Verificar que estemos en la fase de robar
     if (this.partida.faseJuego !== FaseJuego.ROBO) {
@@ -1419,15 +1308,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
 
   //* Se pierden las carreteras gratis que falten y se vuelve a las acciones
   ejecutarCancelarCarreteras(sessionId: string): Resultado {
-    //* Verificar que la partida siga en curso
-    if (this.partida.fase === FasePartida.FINALIZADA) {
-      return this.fallo("La partida ha finalizado");
-    }
-
-    //* Verificar que sea el turno del jugador
-    if (this.partida.turnoActual !== sessionId) {
-      return this.fallo("No es tu turno");
-    }
+    //* Partida en curso y turno del jugador
+    const rechazo = this.validarTurno(sessionId);
+    if (rechazo) return rechazo;
 
     //* Verificar que estemos en la fase de carreteras
     if (this.partida.faseJuego !== FaseJuego.CARRETERAS) {
