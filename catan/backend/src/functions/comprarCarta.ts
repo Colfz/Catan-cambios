@@ -1,6 +1,8 @@
 import { Desarrollo } from "../common/enums.js";
 import { Jugador } from "../schemas/Jugador.js";
 import { Banca } from "../schemas/Banca.js";
+import { COSTOS } from "../common/costos.js";
+import { cobrarCosto, puedePagar } from "./cobrarCosto.js";
 
 export function comprarCarta(jugador: Jugador, banca: Banca): {
     error: boolean,
@@ -15,7 +17,7 @@ export function comprarCarta(jugador: Jugador, banca: Banca): {
     }
 
     //* verificar que el jugador tenga recursos suficientes para comprar la carta
-    if (!comprobarRecursos(jugador)) {
+    if (!puedePagar(jugador, COSTOS.CARTA)) {
         return {
             error: true,
             mensaje: "No tienes recursos suficientes para comprar una carta"
@@ -26,19 +28,12 @@ export function comprarCarta(jugador: Jugador, banca: Banca): {
     sacarCarta(jugador, banca);
 
     //* Intercambio de recursos
-    eliminarRecursos(jugador, banca);
+    cobrarCosto(jugador, banca, COSTOS.CARTA);
 
     return {
         error: false,
         mensaje: " ha comprado una carta de desarrollo"
     };
-}
-
-function comprobarRecursos(jugador: Jugador): boolean {
-    if (jugador.recursos.get("trigo") < 1) return false;
-    if (jugador.recursos.get("lana") < 1) return false;
-    if (jugador.recursos.get("mineral") < 1) return false;
-    return true;
 }
 
 function sacarCarta(jugador: Jugador, banca: Banca): void {
@@ -54,14 +49,4 @@ function sacarCarta(jugador: Jugador, banca: Banca): void {
 
     //* agregar la carta al jugador
     jugador.cartas_inusables.set(`${carta}`, (jugador.cartas_inusables.get(`${carta}`)) + 1);
-}
-
-function eliminarRecursos(jugador: Jugador, banca: Banca): void {
-    jugador.recursos.set("trigo", jugador.recursos.get("trigo") - 1);
-    jugador.recursos.set("lana", jugador.recursos.get("lana") - 1);
-    jugador.recursos.set("mineral", jugador.recursos.get("mineral") - 1);
-
-    banca.recursos.set("trigo", banca.recursos.get("trigo") + 1);
-    banca.recursos.set("lana", banca.recursos.get("lana") + 1);
-    banca.recursos.set("mineral", banca.recursos.get("mineral") + 1);
 }

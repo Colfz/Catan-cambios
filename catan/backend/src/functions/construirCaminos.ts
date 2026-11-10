@@ -5,6 +5,8 @@ import { Partida } from "../schemas/Partida.js";
 import { Jugador } from "../schemas/Jugador.js";
 import { Banca } from "../schemas/Banca.js";
 import { Construccion, FaseJuego, FasePartida } from "../common/enums.js";
+import { COSTOS } from "../common/costos.js";
+import { cobrarCosto, puedePagar } from "./cobrarCosto.js";
 
 export function construirCamino(
     vertices: MapSchema<Vertice>,
@@ -56,7 +58,7 @@ export function construirCamino(
     } else {
         if(partida.faseJuego !== FaseJuego.CARRETERAS){
             // * Validar que el jugador tenga los materiales suficientes
-            if(!comprobarMateriales(jugador, partida)){
+            if(!puedePagar(jugador, COSTOS.CAMINO)){
                 return {
                     error: true,
                     mensaje: "No tienes los recursos suficientes"
@@ -72,7 +74,7 @@ export function construirCamino(
         }
         if(partida.faseJuego !== FaseJuego.CARRETERAS){
             // * Descontar los materiales del jugador
-            eliminarRecursos(jugador, banca);
+            cobrarCosto(jugador, banca, COSTOS.CAMINO);
         }
     }
 
@@ -89,20 +91,6 @@ export function construirCamino(
         error: false,
         mensaje: " ha construido un camino"
     }
-}
-
-function comprobarMateriales(jugador: Jugador, partida: Partida){
-    if(partida.fase === FasePartida.PRECONSTRUCCION) return true;
-    if(jugador.recursos.get("madera") < 1) return false;
-    if(jugador.recursos.get("ladrillo") < 1) return false;
-    return true;
-}
-
-function eliminarRecursos(jugador: Jugador, banca: Banca){
-    jugador.recursos.set("madera", jugador.recursos.get("madera") - 1);
-    jugador.recursos.set("ladrillo", jugador.recursos.get("ladrillo") - 1);
-    banca.recursos.set("madera", banca.recursos.get("madera") + 1);
-    banca.recursos.set("ladrillo", banca.recursos.get("ladrillo") + 1);
 }
 
 function comprobarCaminoPreconstruccion(
