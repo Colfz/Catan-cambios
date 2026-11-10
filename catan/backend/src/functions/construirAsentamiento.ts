@@ -5,6 +5,8 @@ import { Partida } from "../schemas/Partida.js";
 import { Jugador } from "../schemas/Jugador.js";
 import { Banca } from "../schemas/Banca.js";
 import { Construccion, FasePartida } from "../common/enums.js";
+import { COSTOS } from "../common/costos.js";
+import { cobrarCosto, puedePagar } from "./cobrarCosto.js";
 
 export function construirAsentamiento(
     vertices: MapSchema<Vertice>,
@@ -41,7 +43,7 @@ export function construirAsentamiento(
 
     //* Validando recursos necesarios
     if(
-        partida.fase !== FasePartida.PRECONSTRUCCION && !comprobarRecursos(jugador)
+        partida.fase !== FasePartida.PRECONSTRUCCION && !puedePagar(jugador, COSTOS.ASENTAMIENTO)
     ){
         return {
             error:true,
@@ -93,7 +95,7 @@ export function construirAsentamiento(
 
     //* Eliminacion de recursos y construccion del jugador
     if(partida.fase !== FasePartida.PRECONSTRUCCION){
-        eliminarRecursos(jugador, banca)
+        cobrarCosto(jugador, banca, COSTOS.ASENTAMIENTO)
     }
 
     //* Eliminacion de una construccion de tipo asentamiento del jugador
@@ -116,31 +118,6 @@ export function construirAsentamiento(
 }
 
 
-
-//* Funcion para comprobar si el jugador tiene los recursos suficientes para construir un Asentamiento
-function comprobarRecursos(jugador: Jugador){
-  if(jugador.recursos.get("madera") < 1) return false;
-  if(jugador.recursos.get("ladrillo") < 1) return false;
-  if(jugador.recursos.get("trigo") < 1) return false;
-  if(jugador.recursos.get("lana") < 1) return false;
-  return true;
-}
-
-//* Funcion para eliminar recursos del jugador y asigna recursos a la banca
-function eliminarRecursos(jugador:Jugador, banca:Banca){
-    //* Eliminando recursos DEL JUGADOR
-    jugador.recursos.set("madera", jugador.recursos.get("madera") - 1);
-    jugador.recursos.set("ladrillo", jugador.recursos.get("ladrillo") - 1);
-    jugador.recursos.set("trigo", jugador.recursos.get("trigo") - 1);
-    jugador.recursos.set("lana", jugador.recursos.get("lana") - 1);
-
-    //* Enviando recursos a LA BANCA
-    banca.recursos.set("madera", banca.recursos.get("madera") + 1)
-    banca.recursos.set("ladrillo", banca.recursos.get("ladrillo") + 1)
-    banca.recursos.set("trigo", banca.recursos.get("trigo") + 1)
-    banca.recursos.set("lana", banca.recursos.get("lana") + 1)
-
-}
 
 export function verticesPos0(vertices: MapSchema<Vertice>, h:number, d:number){
     const v1 = vertices.get(`${h},${d},${1}`);
