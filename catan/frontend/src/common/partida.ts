@@ -31,6 +31,12 @@ export interface DatosPartida {
   // sessionId del que tiene el ejercito mas grande. Vacio si todavia nadie.
   ejercitoMasGrande: string;
 
+  // sessionId del que tiene el camino mas largo. Vacio si nadie lo tiene.
+  caminoMasLargo: string;
+
+  // De cuantos caminos es la ruta mas larga de ese jugador. 0 si nadie lo tiene.
+  largoCaminoMasLargo: number;
+
   // Carreteras que puede construir sin pagar (carta de carreteras).
   carreterasGratis: number;
 

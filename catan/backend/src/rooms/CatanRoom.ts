@@ -12,6 +12,7 @@ import { siguienteTurno } from "../functions/siguienteTurno.js";
 import { construirAsentamiento } from "../functions/construirAsentamiento.js";
 import { darMaterialInicial } from "../functions/darMaterialInicial.js";
 import { verificarVictoria } from "../functions/verificarVictoria.js";
+import { recalcularCaminoMasLargo } from "../functions/puntosCaminoMasLargo.js";
 import { construirCiudad } from "../functions/construirCiudad.js";
 import { comerciarBanca } from "../functions/comerciarBanca.js";
 import { descartarRecurso } from "../functions/descartarRecurso.js";
@@ -681,6 +682,12 @@ export class CatanRoom extends Room implements SalaAutomatica {
         return;
       }
 
+      // * El camino nuevo puede darle el camino mas largo
+      if (!resultado.error) {
+        this.actualizarCaminoMasLargo();
+        verificarVictoria(this.partida, jugador, client.sessionId, this);
+      }
+
       // * Reducir la cantidad de caminos gratis restantes
       this.partida.carreterasGratis -= 1;
 
@@ -852,6 +859,11 @@ export class CatanRoom extends Room implements SalaAutomatica {
     const rechazo = this.validarTurno(client.sessionId, partidaEnCurso);
     if (rechazo) this.responder(client, rechazo);
     return rechazo !== null;
+  }
+
+  //* Recalcula quien tiene el camino mas largo (y sus 2 puntos) tras cambiar caminos o construcciones
+  private actualizarCaminoMasLargo() {
+    recalcularCaminoMasLargo(this);
   }
 
   //* Si la accion falla, avisa de ese error solo al cliente que la pidio
@@ -1064,6 +1076,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
         mensaje: resultado.mensaje
       })
 
+      //* El asentamiento puede cortar el camino de un rival y cambiar el camino mas largo
+      this.actualizarCaminoMasLargo();
+
       //* Verificar si el jugador ha ganado
       verificarVictoria(this.partida, jugador, sessionId, this);
     }
@@ -1135,6 +1150,12 @@ export class CatanRoom extends Room implements SalaAutomatica {
         jugador: this.jugadores.get(sessionId)?.nombre,
         mensaje: resultado.mensaje
       })
+
+      //* El camino nuevo puede darle el camino mas largo
+      this.actualizarCaminoMasLargo();
+
+      //* Verificar si el jugador ha ganado
+      verificarVictoria(this.partida, jugador, sessionId, this);
     }
 
     return this.exito();
@@ -1471,6 +1492,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
       })
 
       sacarJugador(this.partida, this.tablero, this.banca, this.jugadores, client.sessionId);
+
+      //* Sus caminos y construcciones ya no estan: el camino mas largo puede cambiar
+      this.actualizarCaminoMasLargo();
 
       //* Al salir puede cambiar el turno o la etapa, o terminar la partida
       this.sincronizarTemporizador();
