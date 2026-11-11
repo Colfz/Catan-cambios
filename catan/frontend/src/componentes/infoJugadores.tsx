@@ -7,9 +7,14 @@ interface Props {
   miSessionId: string;
   // Cartas que aun debe descartar cada jugador durante la fase DESCARTE
   pendientesDescarte?: Record<string, number>;
+  // sessionId de quien tiene el camino mas largo ("" si nadie) y de cuantos caminos es
+  caminoMasLargo?: string;
+  largoCaminoMasLargo?: number;
 }
 
-function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDescarte }: Props) {
+function InfoJugadores({
+  jugadores, ordenJugadores, miSessionId, pendientesDescarte, caminoMasLargo, largoCaminoMasLargo = 0,
+}: Props) {
   const lista = ordenJugadores.length ? ordenJugadores : Object.keys(jugadores);
 
   return (
@@ -22,6 +27,7 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDesca
         const porDescartar = pendientesDescarte?.[id] ?? 0;
         // Solo el dueno recibe sus puntos ocultos; los rivales ven la puntuacion publica.
         const ocultos = yo ? puntosOcultos(j) : 0;
+        const tieneCamino = caminoMasLargo === id;
 
         return (
           <div
@@ -33,6 +39,16 @@ function InfoJugadores({ jugadores, ordenJugadores, miSessionId, pendientesDesca
               <span className="flex-grow-1 text-truncate text-white fw-semibold">
                 {yo && '(Yo) '}{j.nombre}
               </span>
+              {tieneCamino && (
+                <span
+                  className="flex-shrink-0 d-flex align-items-center gap-1 px-1 rounded bg-white text-dark small fw-semibold"
+                  title={`Camino más largo: ${largoCaminoMasLargo} caminos. Vale 2 puntos`}
+                  aria-label={`Tiene el camino más largo, de ${largoCaminoMasLargo} caminos`}
+                >
+                  <img src="/svg/carretera.svg" alt="" aria-hidden="true" width={14} height={14} />
+                  {largoCaminoMasLargo}
+                </span>
+              )}
               <span
                 className="fw-bold flex-shrink-0 text-white"
                 title={ocultos > 0 ? 'Cartas de punto de victoria: solo tú las ves hasta ganar' : undefined}

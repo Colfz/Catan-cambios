@@ -709,6 +709,8 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
                 ? partidaActual.jugadoresParaDescartar
                 : undefined
             }
+            caminoMasLargo={partidaActual?.caminoMasLargo}
+            largoCaminoMasLargo={partidaActual?.largoCaminoMasLargo}
           />
         </div>
         <div className="tablero" style={{ position: 'relative' }}>
