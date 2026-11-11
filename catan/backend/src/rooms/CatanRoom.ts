@@ -13,6 +13,7 @@ import { construirAsentamiento } from "../functions/construirAsentamiento.js";
 import { darMaterialInicial } from "../functions/darMaterialInicial.js";
 import { verificarVictoria } from "../functions/verificarVictoria.js";
 import { recalcularCaminoMasLargo } from "../functions/puntosCaminoMasLargo.js";
+import { sincronizarCantidadesDeMano } from "../functions/cantidadesDeMano.js";
 import { construirCiudad } from "../functions/construirCiudad.js";
 import { comerciarBanca } from "../functions/comerciarBanca.js";
 import { descartarRecurso } from "../functions/descartarRecurso.js";
@@ -874,8 +875,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
       })
     }
 
-    //* La accion pudo cambiar la etapa o el turno
+    //* La accion pudo cambiar la etapa o el turno, y las manos
     this.sincronizarTemporizador();
+    sincronizarCantidadesDeMano(this.jugadores);
   }
 
   ejecutarLanzarDados(sessionId: string): Resultado {
@@ -1393,6 +1395,7 @@ export class CatanRoom extends Room implements SalaAutomatica {
   //* Cada segundo
   tick() {
     this.sincronizarTemporizador();
+    sincronizarCantidadesDeMano(this.jugadores);
     this.temporizador.tick();
   }
 
@@ -1544,12 +1547,16 @@ export class CatanRoom extends Room implements SalaAutomatica {
     this.allowReconnection(client, 30);
   }
 
-  //* Cada cliente solo recibe el dato privado de su propio jugador (puntos de victoria ocultos)
+  //* Cada cliente solo recibe lo privado de su propio jugador: sus puntos de victoria ocultos,
+  //* sus recursos y sus cartas de desarrollo. De los rivales solo llegan las cantidades
   asignarVista(client: Client) {
     const jugador = this.jugadores.get(client.sessionId);
     if (!jugador) return;
     client.view = new StateView();
     client.view.add(jugador.privado);
+    client.view.add(jugador.recursos);
+    client.view.add(jugador.cartas_usables);
+    client.view.add(jugador.cartas_inusables);
   }
 
   onReconnect(client: Client) {

@@ -9,6 +9,8 @@ export const jugadoresPrueba: Jugadores = {
   zNEakYdRU: {
     nombre: 'jenjel',
     puntuacion: 4,
+    cantidadRecursos: 6,
+    cantidadCartas: 1,
     // Solo el jugador propio recibe privado. Tiene una carta de victoria oculta.
     privado: { puntosParaGanar: 5, puntosVictoria: 1 },
     recursos: { madera: 2, trigo: 1, lana: 0, ladrillo: 3, mineral: 0 },
@@ -21,6 +23,8 @@ export const jugadoresPrueba: Jugadores = {
   aB7kLm2Qx: {
     nombre: 'coca',
     puntuacion: 3,
+    cantidadRecursos: 5,
+    cantidadCartas: 2,
     recursos: { madera: 1, trigo: 2, lana: 1, ladrillo: 0, mineral: 1 },
     cartas_usables: { '1': 0, '2': 0, '3': 1, '4': 0, '5': 0 },
     // Compro un caballero este turno: todavia no lo puede jugar.
@@ -32,6 +36,8 @@ export const jugadoresPrueba: Jugadores = {
   Rv9TpZo4c: {
     nombre: 'jair',
     puntuacion: 2,
+    cantidadRecursos: 9,
+    cantidadCartas: 0,
     // Nueve recursos: si sale un 7 tiene que descartar.
     recursos: { madera: 3, trigo: 2, lana: 2, ladrillo: 1, mineral: 1 },
     cartas_usables: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 },
@@ -43,6 +49,8 @@ export const jugadoresPrueba: Jugadores = {
   Wq3sYh8Nd: {
     nombre: 'elayas',
     puntuacion: 5,
+    cantidadRecursos: 3,
+    cantidadCartas: 4,
     recursos: { madera: 0, trigo: 1, lana: 1, ladrillo: 0, mineral: 1 },
     cartas_usables: { '1': 3, '2': 0, '3': 0, '4': 1, '5': 0 },
     cartas_inusables: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 },

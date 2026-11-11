@@ -194,7 +194,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       // jugador. Si cambia el turno o la fase, se cancela.
       setCaballero((anterior) => {
         if (anterior === null) return null;
-        const usables = estado?.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CABALLERO] ?? 0;
+        const usables = estado?.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.CABALLERO] ?? 0;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
         // El caballero se puede jugar antes de lanzar los dados (DADOS) o despues (ACCIONES).
@@ -223,7 +223,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setAbundancia((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.ABUNDANCIA] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.ABUNDANCIA] ?? 0;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
         return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
       });
@@ -232,7 +232,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setMonopolio((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.MONOPOLIO] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.MONOPOLIO] ?? 0;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
         return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
       });
@@ -242,7 +242,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setCarreterasEnEspera((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CARRETERAS] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.CARRETERAS] ?? 0;
         return estado.partida.faseJuego === FASE_JUEGO.CARRETERAS || usables < anterior ? null : anterior;
       });
 
@@ -412,9 +412,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       && partidaActual?.fase === FASE_PARTIDA.JUEGO
       && partidaActual.faseJuego === FASE_JUEGO.ACCIONES
       && (estadoReal?.banca.cartas.length ?? 0) > 0
-      && (miJugadorReal?.recursos.trigo ?? 0) >= 1
-      && (miJugadorReal?.recursos.lana ?? 0) >= 1
-      && (miJugadorReal?.recursos.mineral ?? 0) >= 1,
+      && (miJugadorReal?.recursos?.trigo ?? 0) >= 1
+      && (miJugadorReal?.recursos?.lana ?? 0) >= 1
+      && (miJugadorReal?.recursos?.mineral ?? 0) >= 1,
   );
 
   // Las 4 cartas que se pueden jugar (el punto de victoria no se juega).
@@ -474,7 +474,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     puedePasarTurno
       && !ofertaActiva
       && miJugadorReal
-      && Object.values(miJugadorReal.recursos).some((cantidad) => cantidad > 0),
+      && Object.values(miJugadorReal.recursos ?? {}).some((cantidad) => cantidad > 0),
   );
   /* Me toca responder si el backend me tiene como pendiente (0) en la oferta.
      Al responder (1 o -1) o al cerrarse la oferta, deja de cumplirse. */

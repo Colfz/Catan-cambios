@@ -29,7 +29,7 @@ function CarRecursos({ miJugador }: Props) {
             >
               <img src={ICONO[recurso]} alt={recurso} width={30} height={30} />
               <span className="flex-grow-1 text-truncate">{recurso}</span>
-              <span className="fw-bold">{miJugador.recursos[recurso]}</span>
+              <span className="fw-bold">{miJugador.recursos?.[recurso] ?? 0}</span>
             </ListGroup.Item>
           ))}
         </ListGroup>

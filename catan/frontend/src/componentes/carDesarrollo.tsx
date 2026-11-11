@@ -28,8 +28,8 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
         <>
           <ListGroup variant="flush" className="flex-fill overflow-y-auto" style={{ minHeight: 0 }}>
             {CARTAS.map(({ clave, icono }) => {
-              const usables = miJugador.cartas_usables[clave];
-              const nuevas = miJugador.cartas_inusables[clave];
+              const usables = miJugador.cartas_usables?.[clave] ?? 0;
+              const nuevas = miJugador.cartas_inusables?.[clave] ?? 0;
               const esPuntoVictoria = clave === CARTA.PUNTOS_VICTORIA;
               return (
                 <ListGroup.Item
