@@ -17,6 +17,9 @@ export class Partida extends Schema {
   @type("boolean") cartaJugable: boolean;
   @type("string") ganador: string;
   @type("string") ejercitoMasGrande: string;
+  //* Quien tiene el camino mas largo (vacio si nadie) y de cuantos caminos es
+  @type("string") caminoMasLargo: string;
+  @type("uint8") largoCaminoMasLargo: number;
   @type("uint8") carreterasGratis: number;
   @type(OfertaIntercambio) ofertaIntercambio = new OfertaIntercambio();
   //* Se llena al ganar; ordenado de mayor a menor total
@@ -38,6 +41,8 @@ export class Partida extends Schema {
     this.faseJuego = FaseJuego.DADOS;
     this.ganador = "";
     this.ejercitoMasGrande = "";
+    this.caminoMasLargo = "";
+    this.largoCaminoMasLargo = 0;
     this.carreterasGratis = 0;
     this.tiempoRestante = 0;
     this.ritmo = Ritmo.NORMAL;

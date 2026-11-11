@@ -84,6 +84,12 @@ export function sacarJugador(
         partida.ejercitoMasGrande = "";
     }
 
+    //* Lo mismo con el camino mas largo; se recalcula despues entre los que quedan
+    if(partida.caminoMasLargo === sessionId){
+        partida.caminoMasLargo = "";
+        partida.largoCaminoMasLargo = 0;
+    }
+
     //* Sacarlo del orden y de los jugadores
     const indice = partida.ordenJugadores.indexOf(sessionId);
     if (indice !== -1){
