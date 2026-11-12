@@ -8,11 +8,14 @@ import { generarConstruccionesDisponibles } from "../generators/generarConstrucc
 export class Jugador extends Schema {
     @type("string") nombre: string;
     @type("uint16") puntuacion: number;
+    //* Lo que ven todos de la mano de un rival: cuantas cartas tiene, no cuales
+    @type("uint8") cantidadRecursos: number;
+    @type("uint8") cantidadCartas: number;
     //* Solo lo recibe su dueno (ver asignarVista en CatanRoom)
     @view() @type(PrivadoJugador) privado = new PrivadoJugador();
-    @type({ map: "uint8" }) recursos = new MapSchema<number>();
-    @type({ map: "uint8" }) cartas_usables = new MapSchema<number>();
-    @type({ map: "uint8" }) cartas_inusables = new MapSchema<number>();
+    @view() @type({ map: "uint8" }) recursos = new MapSchema<number>();
+    @view() @type({ map: "uint8" }) cartas_usables = new MapSchema<number>();
+    @view() @type({ map: "uint8" }) cartas_inusables = new MapSchema<number>();
     @type({ map: "uint8" }) construccionesDisponibles = new MapSchema<number>();
     @type("string") ultimoAsentamiento: string;
     @type("uint8") caballerosJugados: number;
@@ -22,6 +25,8 @@ export class Jugador extends Schema {
         super();
         this.nombre = nombre;
         this.puntuacion = 0;
+        this.cantidadRecursos = 0;
+        this.cantidadCartas = 0;
         this.ultimoAsentamiento = "";
         this.caballerosJugados = 0;
         generarRecursos(this.recursos);
