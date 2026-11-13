@@ -125,8 +125,25 @@ function AyudaJuego({ ritmo: ritmoSala = RITMO.NORMAL }: Props) {
                                     compraste ese mismo turno.</li>
                             </Typography>
                             <Typography sx={{ mt: 1 }}>
-                                Con la banca se cambia 4 recursos iguales por 1; con un puerto es 3 por 1, o 2 por 1
-                                si el puerto es de ese recurso.
+                                Con la banca se cambian 4 recursos iguales por 1, o menos si tienes un puerto.
+                            </Typography>
+                        </Seccion>
+
+                        <Divider />
+
+                        <Seccion titulo="Los puertos">
+                            <Typography>
+                                Los puertos están en la costa: cada uno tiene una etiqueta y dos muelles que llegan a
+                                dos vértices. Si tienes un poblado o una ciudad en uno de esos vértices, puedes usar
+                                el puerto al intercambiar con la banca.
+                            </Typography>
+                            <Typography component="ul" sx={{ pl: 3, mt: 1, mb: 0 }}>
+                                <li><strong>3:1</strong>: cambias 3 recursos iguales, de cualquier tipo, por 1.</li>
+                                <li><strong>2 Madera:1</strong> (o el recurso que diga): cambias 2 de ese recurso por 1.</li>
+                            </Typography>
+                            <Typography sx={{ mt: 1 }}>
+                                Sin puerto, la banca cambia 4 por 1. Si tienes varios puertos, se usa siempre el mejor
+                                para el recurso que entregas.
                             </Typography>
                         </Seccion>
 
