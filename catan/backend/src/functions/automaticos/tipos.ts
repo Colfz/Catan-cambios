@@ -21,7 +21,7 @@ export interface SalaAutomatica {
 
     ejecutarLanzarDados(sessionId: string): Resultado;
     ejecutarPasarTurno(sessionId: string): Resultado;
-    ejecutarDescarte(sessionId: string, recursos?: Record<string, number>, recurso?: string): Resultado;
+    ejecutarDescarte(sessionId: string, recursos: Record<string, number>): Resultado;
     ejecutarMoverLadron(sessionId: string, h: number, d: number): Resultado;
     ejecutarRobar(sessionId: string, victima: string): Resultado;
     ejecutarColocarAsentamiento(sessionId: string, h: number, d: number, p: number): Resultado;

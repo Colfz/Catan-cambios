@@ -16,7 +16,6 @@ import { recalcularCaminoMasLargo } from "../functions/puntosCaminoMasLargo.js";
 import { sincronizarCantidadesDeMano } from "../functions/cantidadesDeMano.js";
 import { construirCiudad } from "../functions/construirCiudad.js";
 import { comerciarBanca } from "../functions/comerciarBanca.js";
-import { descartarRecurso } from "../functions/descartarRecurso.js";
 import { descartarRecursosLote } from "../functions/descartarRecursosLote.js";
 import { moverLadron } from "../functions/moverLadron.js";
 import { robarJugador } from "../functions/robarJugador.js";
@@ -256,9 +255,9 @@ export class CatanRoom extends Room implements SalaAutomatica {
 
     msgDescartarRecursos: (
       client: Client,
-      mensaje: { recurso?: string, recursos?: Record<string, number> }
+      mensaje: { recursos: Record<string, number> }
     ) => {
-      this.responder(client, this.ejecutarDescarte(client.sessionId, mensaje.recursos, mensaje.recurso));
+      this.responder(client, this.ejecutarDescarte(client.sessionId, mensaje.recursos));
     },
 
     msgMoverLadron: (
@@ -1163,8 +1162,8 @@ export class CatanRoom extends Room implements SalaAutomatica {
     return this.exito();
   }
 
-  //* Descarta por lote si llegan "recursos", o una sola carta si llega "recurso"
-  ejecutarDescarte(sessionId: string, recursos?: Record<string, number>, recurso?: string): Resultado {
+  //* Descarta de una vez todas las cartas que debe el jugador (formato por lote)
+  ejecutarDescarte(sessionId: string, recursos: Record<string, number>): Resultado {
     //* Verificar si estamos en fase de descarte
     if (this.partida.faseJuego !== FaseJuego.DESCARTE) {
       return this.fallo("No es la fase de descarte");
@@ -1181,40 +1180,26 @@ export class CatanRoom extends Room implements SalaAutomatica {
     //* Cartas que le faltan por descartar
     const cartasDebidas = this.partida.jugadoresParaDescartar.get(jugadorPorDescartar);
 
-    //* Intentar descartar, por lote si llega "recursos" o una sola carta si llega "recurso"
-    const resultado = recursos
-      ? descartarRecursosLote(
-        this.jugadores.get(jugadorPorDescartar),
-        this.banca,
-        recursos,
-        cartasDebidas
-      )
-      : descartarRecurso(
-        this.jugadores.get(jugadorPorDescartar),
-        this.banca,
-        recurso
-      );
+    //* Intentar descartar el lote; si no es valido no se descarta nada
+    const resultado = descartarRecursosLote(
+      this.jugadores.get(jugadorPorDescartar),
+      this.banca,
+      recursos,
+      cartasDebidas
+    );
 
     //*Error en descarte
     if (resultado.error) {
       return this.fallo(resultado.mensaje);
     }
 
-    //*Actualizar la cantidad de recursos que le faltan por descartar
-    this.partida.jugadoresParaDescartar.set(
-      jugadorPorDescartar,
-      recursos ? 0 : cartasDebidas - 1
-    );
-
-    //* Eliminarlo de la lista si ya no tiene que descartar
-    if (this.partida.jugadoresParaDescartar.get(jugadorPorDescartar) === 0) {
-      this.partida.jugadoresParaDescartar.delete(jugadorPorDescartar);
-      //* Log de terminacion de descarte
-      this.broadcast("log", {
-        jugador: this.jugadores.get(sessionId)?.nombre,
-        mensaje: " ha terminado de descartar"
-      })
-    }
+    //* El lote cubre todo lo que debia: sale de la lista
+    this.partida.jugadoresParaDescartar.delete(jugadorPorDescartar);
+    //* Log de terminacion de descarte
+    this.broadcast("log", {
+      jugador: this.jugadores.get(sessionId)?.nombre,
+      mensaje: " ha terminado de descartar"
+    })
 
     //* Verificar si ya no hay jugadores que deben descartar, para pasar a fase de ladron
     if (this.partida.jugadoresParaDescartar.size == 0) {
