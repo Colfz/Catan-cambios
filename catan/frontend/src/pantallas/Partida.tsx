@@ -10,6 +10,7 @@ import { bancaPrueba } from '../datos/bancaPruebas';
 import Existencias from '../componentes/existencias';
 import { tableroPrueba } from '../datos/tableroPrueba'
 import TablaCostes from '../componentes/tablaCostes';
+import AyudaJuego from '../componentes/AyudaJuego';
 import Tablero from '../componentes/tablero';
 import type { Recurso, Recursos } from '../common/jugador';
 import { CARTA } from '../common/jugador';
@@ -672,8 +673,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
 
   return (
     <div className="marcoPartida">
-        <div className="salir"> 
-          <button className="btn btn-danger w-100 h-100" onClick={onSalir}>Salir</button>
+        <div className="salir d-flex gap-1">
+          <AyudaJuego ritmo={partidaActual?.ritmo} />
+          <button className="btn btn-danger flex-fill" onClick={onSalir}>Salir</button>
         </div>
         <div className="tabCostos">
             <TablaCostes />
