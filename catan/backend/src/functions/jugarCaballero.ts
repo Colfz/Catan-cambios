@@ -30,7 +30,7 @@ export function jugarCaballero(
     if(!jugadorMayorEjercito){
         partida.ejercitoMasGrande = sessionId;
         jugador.puntuacion += 2;
-        jugador.puntosParaGanar -= 2;
+        jugador.privado.puntosParaGanar -= 2;
 
         //* Avisar que el jugador ha obtenido el ejercito mas grande
         room.broadcast("log", {
@@ -44,11 +44,11 @@ export function jugarCaballero(
     if(jugador.caballerosJugados > jugadorMayorEjercito.caballerosJugados){
         //* Quitar los 2 puntos del actual
         jugadorMayorEjercito.puntuacion -= 2;
-        jugadorMayorEjercito.puntosParaGanar += 2;
+        jugadorMayorEjercito.privado.puntosParaGanar += 2;
 
         //* Dar 2 puntos al nuevo
         jugador.puntuacion += 2;
-        jugador.puntosParaGanar -= 2;
+        jugador.privado.puntosParaGanar -= 2;
 
         //* Asignarlo en la partida como el duenio del ejercito mas grande
         partida.ejercitoMasGrande = sessionId;

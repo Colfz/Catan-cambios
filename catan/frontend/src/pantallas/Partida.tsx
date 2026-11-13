@@ -10,6 +10,7 @@ import { bancaPrueba } from '../datos/bancaPruebas';
 import Existencias from '../componentes/existencias';
 import { tableroPrueba } from '../datos/tableroPrueba'
 import TablaCostes from '../componentes/tablaCostes';
+import AyudaJuego from '../componentes/AyudaJuego';
 import Tablero from '../componentes/tablero';
 import type { Recurso, Recursos } from '../common/jugador';
 import { CARTA } from '../common/jugador';
@@ -25,7 +26,7 @@ import Construir, {
   type SolicitudConstruccion,
   type TipoConstruccion,
 } from '../componentes/construir';
-import { FASE_JUEGO, FASE_PARTIDA, FASE_PRECONSTRUCCION } from '../common/fases';
+import { FASE_JUEGO, FASE_PARTIDA, FASE_PRECONSTRUCCION, RITMO } from '../common/fases';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -111,6 +112,10 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
   const [caminoGratisEnEspera, setCaminoGratisEnEspera] = useState<number | null>(null);
   // true mientras se esta en la fase CARRETERAS en mi turno (modo camino activo).
   const modoCaminosGratis = useRef(false);
+  /* Turno y etapa de la ultima lectura del estado. Si cambian (porque jugue o
+     porque el servidor actuo al acabarse el tiempo) se cierra lo que haya
+     quedado abierto. */
+  const etapaPrevia = useRef<string | null>(null);
   // true desde que se envia la propuesta hasta que el servidor la publica.
   const [propuestaEnEspera, setPropuestaEnEspera] = useState(false);
   // true desde que se responde la propuesta hasta que el servidor lo registra.
@@ -190,10 +195,12 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       // jugador. Si cambia el turno o la fase, se cancela.
       setCaballero((anterior) => {
         if (anterior === null) return null;
-        const usables = estado?.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CABALLERO] ?? 0;
+        const usables = estado?.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.CABALLERO] ?? 0;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
-        return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
+        // El caballero se puede jugar antes de lanzar los dados (DADOS) o despues (ACCIONES).
+        return estado.partida.faseJuego === FASE_JUEGO.ACCIONES
+          || estado.partida.faseJuego === FASE_JUEGO.DADOS ? anterior : null;
       });
 
       // La propuesta se confirma cuando aparece en el estado como mia.
@@ -217,7 +224,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setAbundancia((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.ABUNDANCIA] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.ABUNDANCIA] ?? 0;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
         return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
       });
@@ -226,7 +233,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setMonopolio((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.MONOPOLIO] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.MONOPOLIO] ?? 0;
         if (typeof anterior === 'number') return usables < anterior ? null : anterior;
         return estado.partida.faseJuego === FASE_JUEGO.ACCIONES ? anterior : null;
       });
@@ -236,9 +243,33 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       setCarreterasEnEspera((anterior) => {
         if (anterior === null) return null;
         if (!estado || estado.partida.turnoActual !== salaActual.sessionId) return null;
-        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables[CARTA.CARRETERAS] ?? 0;
+        const usables = estado.jugadores[salaActual.sessionId]?.cartas_usables?.[CARTA.CARRETERAS] ?? 0;
         return estado.partida.faseJuego === FASE_JUEGO.CARRETERAS || usables < anterior ? null : anterior;
       });
+
+      /* Al cambiar el turno o la etapa se cierra lo que haya quedado abierto: la
+         construccion elegida, el menu de cartas, el dialogo de banca y los pasos
+         "eligiendo" de las cartas. Va antes del bloque de caminos gratis para que
+         entrar en CARRETERAS siga activando el modo camino. */
+      const etapa = estado
+        ? [
+          estado.partida.turnoActual,
+          estado.partida.fase,
+          estado.partida.faseJuego,
+          estado.partida.fasePreconstruccion,
+        ].join("|")
+        : null;
+      if (etapaPrevia.current !== null && etapa !== etapaPrevia.current) {
+        setTipoConstruccion(null);
+        setObjetivoConstruccion(null);
+        setEstadoConstruccion("");
+        setMenuCartasAbierto(false);
+        setIntercambioAbierto(false);
+        setCaballero((anterior) => (anterior === "eligiendo" ? null : anterior));
+        setAbundancia((anterior) => (anterior === "eligiendo" ? null : anterior));
+        setMonopolio((anterior) => (anterior === "eligiendo" ? null : anterior));
+      }
+      etapaPrevia.current = etapa;
 
       /* Caminos gratis: al entrar a la fase CARRETERAS en mi turno se activa
          solo el modo "camino" (se ven las aristas para elegir); al salir (el
@@ -351,7 +382,8 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     sala
       && esMiTurno
       && estadoReal?.partida.fase === FASE_PARTIDA.JUEGO
-      && estadoReal.partida.faseJuego === FASE_JUEGO.DADOS,
+      && estadoReal.partida.faseJuego === FASE_JUEGO.DADOS
+      && caballero === null,
   );
   // Se llega aqui tras sacar 7 o despues de que todos terminen de descartar.
   const puedeMoverLadron = Boolean(
@@ -381,9 +413,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
       && partidaActual?.fase === FASE_PARTIDA.JUEGO
       && partidaActual.faseJuego === FASE_JUEGO.ACCIONES
       && (estadoReal?.banca.cartas.length ?? 0) > 0
-      && (miJugadorReal?.recursos.trigo ?? 0) >= 1
-      && (miJugadorReal?.recursos.lana ?? 0) >= 1
-      && (miJugadorReal?.recursos.mineral ?? 0) >= 1,
+      && (miJugadorReal?.recursos?.trigo ?? 0) >= 1
+      && (miJugadorReal?.recursos?.lana ?? 0) >= 1
+      && (miJugadorReal?.recursos?.mineral ?? 0) >= 1,
   );
 
   // Las 4 cartas que se pueden jugar (el punto de victoria no se juega).
@@ -392,9 +424,18 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     cartasUsables[CARTA.CABALLERO] + cartasUsables[CARTA.CARRETERAS]
       + cartasUsables[CARTA.ABUNDANCIA] + cartasUsables[CARTA.MONOPOLIO] > 0
   ));
-  // El backend permite una carta por turno y solo en la fase de acciones.
+  /* Antes de lanzar los dados (fase DADOS) solo se puede jugar el caballero;
+     el resto de cartas necesita la fase de acciones. */
+  const antesDeDados = Boolean(
+    sala
+      && esMiTurno
+      && partidaActual?.fase === FASE_PARTIDA.JUEGO
+      && partidaActual.faseJuego === FASE_JUEGO.DADOS,
+  );
+  const tieneCaballero = (cartasUsables?.[CARTA.CABALLERO] ?? 0) > 0;
+  // El backend permite una carta por turno, en acciones o (el caballero) antes de los dados.
   const puedeUsarCarta = Boolean(
-    puedePasarTurno
+    (puedePasarTurno || (antesDeDados && tieneCaballero))
       && partidaActual?.cartaJugable
       && tieneCartaUsable
       && caballero === null
@@ -434,7 +475,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     puedePasarTurno
       && !ofertaActiva
       && miJugadorReal
-      && Object.values(miJugadorReal.recursos).some((cantidad) => cantidad > 0),
+      && Object.values(miJugadorReal.recursos ?? {}).some((cantidad) => cantidad > 0),
   );
   /* Me toca responder si el backend me tiene como pendiente (0) en la oferta.
      Al responder (1 o -1) o al cerrarse la oferta, deja de cumplirse. */
@@ -487,11 +528,10 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
     sala.send('msgIntercambiarBanca', { recursoEntregado: entregado, recursoRecibido: recibido });
   }
 
-  function descartarRecurso(recurso: Recurso) {
-    const disponibles = estadoReal?.jugadores[miSessionId]?.recursos[recurso] ?? 0;
-    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null || disponibles < 1) return;
+  function descartarRecursos(recursos: Partial<Record<Recurso, number>>) {
+    if (!sala || !esSuTurnoDeDescartar || descarteEnEspera !== null) return;
     setDescarteEnEspera(descartesPendientes);
-    sala.send('msgDescartarRecursos', { recurso });
+    sala.send('msgDescartarRecursos', { recursos });
   }
 
   function lanzarDados() {
@@ -633,8 +673,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
 
   return (
     <div className="marcoPartida">
-        <div className="salir"> 
-          <button className="btn btn-danger w-100 h-100" onClick={onSalir}>Salir</button>
+        <div className="salir d-flex gap-1">
+          <AyudaJuego ritmo={partidaActual?.ritmo} />
+          <button className="btn btn-danger flex-fill" onClick={onSalir}>Salir</button>
         </div>
         <div className="tabCostos">
             <TablaCostes />
@@ -665,6 +706,13 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
             jugadores={jugadores}
             ordenJugadores={ordenJugadores}
             miSessionId={miSessionId}
+            pendientesDescarte={
+              partidaActual?.faseJuego === FASE_JUEGO.DESCARTE
+                ? partidaActual.jugadoresParaDescartar
+                : undefined
+            }
+            caminoMasLargo={partidaActual?.caminoMasLargo}
+            largoCaminoMasLargo={partidaActual?.largoCaminoMasLargo}
           />
         </div>
         <div className="tablero" style={{ position: 'relative' }}>
@@ -775,6 +823,13 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
             sessionIdTurno={turnoActual}
             jugadores={jugadores}
             ordenJugadores={ordenJugadores}
+            tiempoRestante={partidaActual?.tiempoRestante ?? 0}
+            mostrarTiempo={Boolean(
+              partidaActual
+                && (partidaActual.fase === FASE_PARTIDA.PRECONSTRUCCION || partidaActual.fase === FASE_PARTIDA.JUEGO)
+                && partidaActual.ritmo !== RITMO.SIN_LIMITE
+                && partidaActual.tiempoRestante > 0,
+            )}
           />
           <Button
             className="flex-fill"
@@ -794,11 +849,12 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
           />
         </div>
         <DescartarRecursos
+          key={descartesPendientes}
           pendientes={descartesPendientes}
           recursos={estadoReal?.jugadores[miSessionId]?.recursos}
           esSuTurnoDeDescartar={esSuTurnoDeDescartar}
           enviando={descarteEnEspera !== null}
-          onDescartar={descartarRecurso}
+          onDescartarLote={descartarRecursos}
         />
           <ElegirRobo
           abierto={puedeRobar}
@@ -810,6 +866,7 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
         <UsarCarta
           abierto={menuCartasAbierto && puedeUsarCarta}
           cartasUsables={cartasUsables}
+          soloCaballero={antesDeDados}
           onElegir={elegirCarta}
           onCerrar={() => setMenuCartasAbierto(false)}
         />
@@ -836,6 +893,9 @@ function Partida({ sala, onSolicitarConstruccion, onSalir }: Props) {
           abierto={partidaFinalizada && !verTableroFinal}
           nombreGanador={nombreGanador}
           soyElGanador={partidaActual?.ganador === miSessionId}
+          resultados={partidaActual?.resultadoFinal ?? []}
+          ganadorId={partidaActual?.ganador ?? ''}
+          miSessionId={miSessionId}
           onSalir={() => onSalir?.()}
           onVerTablero={() => setVerTableroFinal(true)}
         />

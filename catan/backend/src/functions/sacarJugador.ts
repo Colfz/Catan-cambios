@@ -6,6 +6,7 @@ import { Tablero } from "../schemas/Tablero.js";
 import { Partida } from "../schemas/Partida.js";
 import { siguienteTurnoPreconstruccion } from "./siguienteTurnoPreconstruccion.js";
 import { siguienteTurno } from "./siguienteTurno.js";
+import { calcularResultadoFinal } from "./calcularResultadoFinal.js";
 
 
 export function sacarJugador(
@@ -84,6 +85,12 @@ export function sacarJugador(
         partida.ejercitoMasGrande = "";
     }
 
+    //* Lo mismo con el camino mas largo; se recalcula despues entre los que quedan
+    if(partida.caminoMasLargo === sessionId){
+        partida.caminoMasLargo = "";
+        partida.largoCaminoMasLargo = 0;
+    }
+
     //* Sacarlo del orden y de los jugadores
     const indice = partida.ordenJugadores.indexOf(sessionId);
     if (indice !== -1){
@@ -107,5 +114,9 @@ export function sacarJugador(
     if (partida.ordenJugadores.length < 2){
         partida.ganador = partida.ordenJugadores[0] ?? "";
         partida.fase = FasePartida.FINALIZADA;
+
+        //* La tabla final tambien al ganar por abandono, con los puntos de quienes quedan
+        partida.resultadoFinal.clear();
+        partida.resultadoFinal.push(...calcularResultadoFinal(jugadores));
     }
 }

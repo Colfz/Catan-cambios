@@ -57,3 +57,19 @@ export const NOMBRE_FASE_JUEGO: Record<FaseJuego, string> = {
   [FASE_JUEGO.DESCARTE]: 'Descartar recursos',
   [FASE_JUEGO.CARRETERAS]: 'Construir carreteras',
 };
+
+// Ritmo de la partida (copia de Ritmo en backend/src/common/enums.ts). El
+// jugador que crea la sala lo elige y decide cuanto tiempo tiene cada etapa.
+export const RITMO = {
+  NORMAL: 1,
+  RAPIDO: 2,
+  SIN_LIMITE: 3,
+} as const;
+
+export type Ritmo = (typeof RITMO)[keyof typeof RITMO];
+
+export const NOMBRE_RITMO: Record<Ritmo, string> = {
+  [RITMO.NORMAL]: "Normal",
+  [RITMO.RAPIDO]: "Rápido",
+  [RITMO.SIN_LIMITE]: "Sin límite",
+};

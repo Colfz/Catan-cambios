@@ -1,6 +1,6 @@
 import { Badge, Button, Card, ListGroup } from 'react-bootstrap';
 import type { Cartas, Jugador } from '../common/jugador';
-import { CARTA, NOMBRE_CARTA } from '../common/jugador';
+import { CARTA, NOMBRE_CARTA, puntosOcultos } from '../common/jugador';
 
 const CARTAS: { clave: keyof Cartas; icono: string }[] = [
   { clave: CARTA.CABALLERO,       icono: '/svg/caballero.svg' },
@@ -28,14 +28,14 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
         <>
           <ListGroup variant="flush" className="flex-fill overflow-y-auto" style={{ minHeight: 0 }}>
             {CARTAS.map(({ clave, icono }) => {
-              const usables = miJugador.cartas_usables[clave];
-              const nuevas = miJugador.cartas_inusables[clave];
+              const usables = miJugador.cartas_usables?.[clave] ?? 0;
+              const nuevas = miJugador.cartas_inusables?.[clave] ?? 0;
               const esPuntoVictoria = clave === CARTA.PUNTOS_VICTORIA;
               return (
                 <ListGroup.Item
                   key={clave}
                   title={esPuntoVictoria
-                    ? 'Su efecto es inmediato y no se puede jugar'
+                    ? 'Punto de victoria oculto: suma en cuanto la compras, no se juega y solo tú lo ves hasta ganar'
                     : NOMBRE_CARTA[clave]}
                   className="d-flex align-items-center gap-2 py-0"
                 >
@@ -49,7 +49,8 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
                       +{nuevas}
                     </Badge>
                   )}
-                  <span className="fw-bold">{esPuntoVictoria ? usables + nuevas : usables}</span>
+                  {/* Las cartas de victoria ya no van en los mapas de cartas: viven en el dato privado */}
+                  <span className="fw-bold">{esPuntoVictoria ? puntosOcultos(miJugador) : usables}</span>
                 </ListGroup.Item>
               );
             })}
@@ -70,7 +71,7 @@ function CarDesarrollo({ miJugador, puedeComprar, comprando, onComprar, puedeUsa
               size="sm"
               disabled={!puedeUsarCarta}
               onClick={onUsarCarta}
-              title="Solo una carta por turno, en la fase de acciones"
+              title="Solo una carta por turno, en la fase de acciones (el caballero también antes de lanzar los dados)"
               className="flex-fill m-0"
             >
               Usar carta

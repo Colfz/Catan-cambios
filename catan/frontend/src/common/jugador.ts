@@ -67,18 +67,28 @@ export const NOMBRE_PIEZA: Record<string, string> = {
 
 /* el jugador
    La clave del mapa es el sessionId que Colyseus le asigna a cada cliente.
-   Los nueve campos son copia literal de backend/src/schemas/Jugador.ts. Lo
-   unico que el backend NO manda es el color: se calcula abajo. */
+   Los campos son copia literal de backend/src/schemas/Jugador.ts. Lo unico
+   que el backend NO manda es el color: se calcula abajo.
+   Ojo: privado, recursos y las cartas de desarrollo solo llegan para MI
+   jugador; en los rivales son undefined. De ellos solo se sabe cuantas cartas
+   tienen (cantidadRecursos y cantidadCartas). */
 
 export interface Jugador {
   nombre: string;
   puntuacion: number;
-  puntosParaGanar: number;
-  recursos: Recursos;
+  // Cuantas cartas de recurso y de desarrollo tiene. Estas si las recibe todo el mundo.
+  cantidadRecursos: number;
+  cantidadCartas: number;
+  /* Solo lo recibe su dueno (StateView en el backend). puntosVictoria son las
+     cartas de punto de victoria compradas, ocultas a los rivales hasta ganar. */
+  privado?: { puntosParaGanar: number; puntosVictoria: number };
+  // La mano solo llega para MI jugador; en los rivales no esta.
+  recursos?: Recursos;
   /* Son dos mapas separados: las inusables se compraron este turno y pasan a
-     usables al pasar el turno. No los junten en uno solo. */
-  cartas_usables: Cartas;
-  cartas_inusables: Cartas;
+     usables al pasar el turno. No los junten en uno solo. Tambien solo llegan
+     para MI jugador. */
+  cartas_usables?: Cartas;
+  cartas_inusables?: Cartas;
   construccionesDisponibles: ConstruccionesDisponibles;
   // Clave del vertice donde puso su ultimo asentamiento, para la preconstruccion.
   ultimoAsentamiento: string;
@@ -106,8 +116,10 @@ export function colorDeJugador(ordenJugadores: string[], sessionId: string): str
 
 
 /* cuentas
-   No se guardan como campo. Si se guardaran habria que mantenerlas
-   sincronizadas con los mapas y tarde o temprano mentirian. */
+   El servidor manda cuantas cartas tiene cada jugador (cantidadRecursos y
+   cantidadCartas), porque las manos de los rivales no llegan. De MI jugador
+   se cuenta la mano real: asi el numero cambia al instante y no espera al
+   siguiente aviso del servidor. */
 
 function sumar(mapa: Recursos | Cartas): number {
   return Object.values(mapa).reduce((total, n) => total + n, 0);
@@ -115,12 +127,20 @@ function sumar(mapa: Recursos | Cartas): number {
 
 // Cartas de recurso en la mano. Es el numero que ven los rivales.
 export function totalRecursos(jugador: Jugador): number {
-  return sumar(jugador.recursos);
+  return jugador.recursos ? sumar(jugador.recursos) : jugador.cantidadRecursos ?? 0;
 }
 
 // Cartas de desarrollo en la mano, se puedan jugar ahora o no.
 export function totalCartas(jugador: Jugador): number {
-  return sumar(jugador.cartas_usables) + sumar(jugador.cartas_inusables);
+  if (jugador.cartas_usables && jugador.cartas_inusables) {
+    return sumar(jugador.cartas_usables) + sumar(jugador.cartas_inusables);
+  }
+  return jugador.cantidadCartas ?? 0;
+}
+
+// Puntos de victoria ocultos. Solo el dueno los conoce; para un rival da 0.
+export function puntosOcultos(jugador: Jugador): number {
+  return jugador.privado?.puntosVictoria ?? 0;
 }
 
 // Todas las cartas en la mano: recursos mas desarrollo.

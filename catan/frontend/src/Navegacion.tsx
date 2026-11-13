@@ -193,6 +193,7 @@ function Navegacion() {
         nombre: nombreJugador,
         alias: datos.alias,
         privada: datos.privada,
+        ritmo: datos.ritmo,
         // El creador también pasa por onJoin, que compara este código.
         codigoAcceso: datos.privada ? datos.codigoAcceso : "",
       });

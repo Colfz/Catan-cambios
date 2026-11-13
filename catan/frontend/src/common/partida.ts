@@ -31,11 +31,40 @@ export interface DatosPartida {
   // sessionId del que tiene el ejercito mas grande. Vacio si todavia nadie.
   ejercitoMasGrande: string;
 
+  // sessionId del que tiene el camino mas largo. Vacio si nadie lo tiene.
+  caminoMasLargo: string;
+
+  // De cuantos caminos es la ruta mas larga de ese jugador. 0 si nadie lo tiene.
+  largoCaminoMasLargo: number;
+
   // Carreteras que puede construir sin pagar (carta de carreteras).
   carreterasGratis: number;
 
   // La oferta de intercambio que este sobre la mesa ahora mismo.
   ofertaIntercambio: Oferta;
+
+  /* Se llena cuando alguien gana, ordenado de mayor a menor total. Vacio
+     mientras la partida siga. */
+  resultadoFinal: ResultadoJugador[];
+
+  // Segundos que quedan en la etapa actual. 0 si no hay limite de tiempo.
+  tiempoRestante: number;
+
+  // Ritmo elegido al crear la sala. Ver RITMO en common/fases.ts.
+  ritmo: number;
+}
+
+/* schemas/ResultadoJugador.ts — lo que se revela de cada jugador al terminar
+   la partida, incluidas las cartas de punto de victoria que estaban ocultas. */
+export interface ResultadoJugador {
+  sessionId: string;
+  nombre: string;
+  // Los puntos que todos veian durante la partida.
+  puntosPublicos: number;
+  // Cartas de punto de victoria que estaban ocultas.
+  cartasVictoria: number;
+  // puntosPublicos + cartasVictoria.
+  total: number;
 }
 
 /* schemas/OfertaIntercambio.ts — un jugador propone cambiar recursos y los

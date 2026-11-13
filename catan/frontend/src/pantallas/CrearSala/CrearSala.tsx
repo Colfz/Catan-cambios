@@ -5,10 +5,16 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import type { Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import { NOMBRE_RITMO, RITMO, type Ritmo } from "../../common/fases";
 import {
   LARGO_MAXIMO_ALIAS,
   LARGO_MAXIMO_CODIGO,
@@ -22,7 +28,16 @@ export interface DatosNuevaSala {
   alias: string;
   privada: boolean;
   codigoAcceso?: string;
+  // Decide cuanto tiempo tiene cada etapa del turno. Ver RITMO en common/fases.ts.
+  ritmo: Ritmo;
 }
+
+// Lo que significa cada ritmo, para que quien crea la sala sepa que elige.
+const DESCRIPCION_RITMO: Record<Ritmo, string> = {
+  [RITMO.NORMAL]: "Tiempo cómodo en cada etapa. Si alguien se queda quieto, el servidor juega en su lugar.",
+  [RITMO.RAPIDO]: "La mitad del tiempo en cada etapa. Si alguien se queda quieto, el servidor juega en su lugar.",
+  [RITMO.SIN_LIMITE]: "Sin contador ni acciones automáticas. La partida espera a cada jugador.",
+};
 
 interface CrearSalaProps {
   nombreJugador: string;
@@ -36,6 +51,8 @@ function CrearSala({ nombreJugador, onCrear, onVolver }: CrearSalaProps) {
   // Apagado por defecto: las salas son públicas salvo que se pida lo contrario.
   const [privada, setPrivada] = useState(false);
   const [codigo, setCodigo] = useState("");
+  // Normal viene marcado: es el ritmo con el que se juega si nadie lo cambia.
+  const [ritmo, setRitmo] = useState<Ritmo>(RITMO.NORMAL);
   const [intentoEnviar, setIntentoEnviar] = useState(false);
   const [creando, setCreando] = useState(false);
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
@@ -57,6 +74,7 @@ function CrearSala({ nombreJugador, onCrear, onVolver }: CrearSalaProps) {
       alias: alias.trim(),
       privada,
       codigoAcceso: privada ? codigo : undefined,
+      ritmo,
     });
     // Si todo salió bien, Navegacion ya cambió de pantalla y este
     // componente se desmontó: no hay que tocar su estado.
@@ -164,6 +182,31 @@ function CrearSala({ nombreJugador, onCrear, onVolver }: CrearSalaProps) {
                 }}
               />
             )}
+
+            <FormControl>
+              <FormLabel id="ritmo-titulo">Ritmo de la partida</FormLabel>
+              <RadioGroup
+                aria-labelledby="ritmo-titulo"
+                name="ritmo"
+                value={String(ritmo)}
+                onChange={(e) => setRitmo(Number(e.target.value) as Ritmo)}
+              >
+                {([RITMO.NORMAL, RITMO.RAPIDO, RITMO.SIN_LIMITE] as Ritmo[]).map((opcion) => (
+                  <FormControlLabel
+                    key={opcion}
+                    value={String(opcion)}
+                    control={<Radio />}
+                    label={
+                      <span className="d-flex flex-column">
+                        <span className="fw-semibold">{NOMBRE_RITMO[opcion]}</span>
+                        <small className="text-body-secondary">{DESCRIPCION_RITMO[opcion]}</small>
+                      </span>
+                    }
+                    className="mb-1"
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
 
             {errorServidor && (
               <Alert severity="error">{errorServidor}</Alert>

@@ -60,3 +60,10 @@ export enum FaseJuego {
     DESCARTE = 5,
     CARRETERAS = 6
 }
+
+//* Ritmo de la partida: decide cuanto tiempo tiene cada etapa
+export enum Ritmo {
+    NORMAL = 1,
+    RAPIDO = 2,
+    SIN_LIMITE = 3
+}

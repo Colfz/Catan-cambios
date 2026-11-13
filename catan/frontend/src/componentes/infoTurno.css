@@ -1,0 +1,23 @@
+/* Los digitos del mismo ancho evitan que el contador baile cada segundo. */
+.infoTurnoTiempo {
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  padding: 0 0.4rem;
+}
+
+/* Fondo claro: se lee bien sobre el color de cualquier jugador. */
+.infoTurnoTiempo--aviso {
+  background-color: #fff;
+  border-radius: 0.25rem;
+  color: #a4161a;
+  font-weight: 700;
+  animation: infoTurnoPulso 1s ease-in-out infinite;
+}
+
+@keyframes infoTurnoPulso {
+  50% { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infoTurnoTiempo--aviso { animation: none; }
+}

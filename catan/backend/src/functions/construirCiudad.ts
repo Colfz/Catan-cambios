@@ -3,6 +3,8 @@ import { Vertice } from "../schemas/Vertices.js";
 import { Jugador } from "../schemas/Jugador.js";
 import { Banca } from "../schemas/Banca.js";
 import { Construccion } from "../common/enums.js";
+import { COSTOS } from "../common/costos.js";
+import { cobrarCosto, puedePagar } from "./cobrarCosto.js";
 
 export function construirCiudad(
     vertices: MapSchema<Vertice>,
@@ -50,7 +52,7 @@ export function construirCiudad(
     }
 
     //* Verificacion de recursos sufientes
-    if(!comprobarRecursos(jugador)){
+    if(!puedePagar(jugador, COSTOS.CIUDAD)){
         return{
             error: true,
             mensaje: "No tienes recursos para construir una ciduad"
@@ -61,10 +63,10 @@ export function construirCiudad(
     vertice.constuccion = Construccion.CIUDAD;
 
     //* Restar los materiales al jugador y darselos a la banca
-    eliminarRecursos(jugador, banca);
+    cobrarCosto(jugador, banca, COSTOS.CIUDAD);
 
     jugador.puntuacion += 1;
-    jugador.puntosParaGanar -= 1;
+    jugador.privado.puntosParaGanar -= 1;
 
     //* Reintegrar el asentimiento y eliminar la ciudad
     jugador.construccionesDisponibles.set(
@@ -80,20 +82,5 @@ export function construirCiudad(
     return{
         error: false,
         mensaje: " ha construido una ciudad"
-    }
-
-    function comprobarRecursos(jugador: Jugador){
-        if(jugador.recursos.get("trigo") < 2) return false;
-        if(jugador.recursos.get("mineral") < 3) return false;
-        return true;
-    }
-
-    function eliminarRecursos(jugador: Jugador, banca: Banca){
-        jugador.recursos.set("trigo", jugador.recursos.get("trigo") - 2);
-        jugador.recursos.set("mineral", jugador.recursos.get("mineral") - 3);
-
-        banca.recursos.set("trigo", banca.recursos.get("trigo") + 2);
-        banca.recursos.set("mineral", banca.recursos.get("mineral") + 3);
-        
     }
 }
