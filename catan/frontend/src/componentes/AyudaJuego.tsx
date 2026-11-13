@@ -37,7 +37,7 @@ const COSTOS: { nombre: string; icono: string; recursos: { icono: string; nombre
 ];
 
 const CARTAS: { nombre: string; icono: string; efecto: string }[] = [
-    { nombre: "Caballero", icono: "/svg/caballero.svg", efecto: "Mueve al ladrón y roba un recurso. Con 3 caballeros jugados puedes tener el ejército más grande." },
+    { nombre: "Caballero", icono: "/svg/caballero.svg", efecto: "Mueve al ladrón y roba un recurso. Es la única carta que puedes jugar antes de lanzar los dados. Con 3 caballeros jugados puedes tener el ejército más grande." },
     { nombre: "Carreteras", icono: "/svg/carreteras.svg", efecto: "Construyes 2 caminos gratis." },
     { nombre: "Abundancia", icono: "/svg/abundancia.svg", efecto: "Tomas 2 recursos de la banca." },
     { nombre: "Monopolio", icono: "/svg/monopolio.svg", efecto: "Eliges un recurso y los demás te dan todos los que tengan." },
@@ -116,6 +116,7 @@ function AyudaJuego({ ritmo: ritmoSala = RITMO.NORMAL }: Props) {
 
                         <Seccion titulo="Tu turno">
                             <Typography component="ol" sx={{ pl: 3, m: 0 }}>
+                                <li>Si tienes un caballero, puedes jugarlo antes de lanzar para mover al ladrón.</li>
                                 <li>Lanza los dados. Los hexágonos con ese número dan recursos a los pobladores
                                     (1 por poblado, 2 por ciudad).</li>
                                 <li>Construye, compra cartas de desarrollo, juega una carta e intercambia con la banca
